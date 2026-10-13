@@ -1,5 +1,7 @@
 "use client";
 
+import "./references.css";
+
 import { FormEvent, useState } from "react";
 
 type ReferenceResult = {
