@@ -1,0 +1,35 @@
+name: Reference Center CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [feat/cosmos-reference-center]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: reference-center-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies
+        run: npm install
+      - name: Run lint
+        run: npm run lint
+      - name: Build Next.js app
+        run: npm run build
+        env:
+          EXA_API_KEY: ci-placeholder-not-a-real-key
+          DATABASE_URL: postgres://ci:ci@localhost:5432/cosmos_ci
