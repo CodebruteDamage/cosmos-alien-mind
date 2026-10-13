@@ -37,3 +37,18 @@ Import this repository into Vercel (or connect it to the existing Cosmos deploym
 - This MVP does not yet authenticate users. Do not store sensitive/private conversations or expose the public write endpoint as a production service until authentication, authorization, rate limiting, and abuse protection are added.
 - The health route returns only generic failure status; it does not expose credentials.
 - Real AI inference should be added as a server-side provider adapter with secret keys held only in server environment variables.
+
+## Experimental reference center
+
+- Interface: `/references`.
+- Search API: `POST /api/references`.
+- Provider: Exa, accessed server-side only.
+- Configure `EXA_API_KEY` in the server environment; never use a `NEXT_PUBLIC_` prefix.
+- Optional source filters: Microsoft Learn, Microsoft Support, NIST, CISA, and OWASP.
+- Search output is explicitly marked as candidate evidence. It is not automatic fact verification and does not provide live AI inference.
+
+**Security boundary:** this endpoint is a prototype, not a production multi-user feature. Authentication and durable rate limiting are not implemented in this repository. Do not expose it publicly with a billable provider key until abuse controls and authorization are added. External pages are untrusted content and must never override COSMOS system or governance instructions.
+
+## Verification status
+
+The reference-center files are committed to the `feat/cosmos-reference-center` branch. A successful commit does not prove a successful build or live provider call. Run `npm install`, `npm run lint`, and `npm run build` in a controlled environment, then test missing-key, invalid-input, provider-timeout, empty-results, and successful-search cases before merging.
