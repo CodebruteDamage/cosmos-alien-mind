@@ -48,14 +48,6 @@ function safeResult(result: ExaResult) {
 }
 
 export async function POST(request: NextRequest) {
-  const apiKey = process.env.EXA_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json(
-      { error: "Reference search is not configured. Set EXA_API_KEY on the server." },
-      { status: 503 },
-    );
-  }
-
   let body: unknown;
   try {
     body = await request.json();
@@ -68,6 +60,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { error: "Enter a question of 3–500 characters and select valid source filters." },
       { status: 400 },
+    );
+  }
+
+  const apiKey = process.env.EXA_API_KEY;
+  if (!apiKey) {
+    return NextResponse.json(
+      { error: "Reference search is not configured. Set EXA_API_KEY on the server." },
+      { status: 503 },
     );
   }
 
