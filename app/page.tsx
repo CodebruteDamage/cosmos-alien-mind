@@ -73,7 +73,7 @@ export default function Home() {
         <div className="sidebar-foot"><span className="status-dot" /> Private server-side connection<br /><span className="muted">Database status: {status}</span></div>
       </aside>
       <section className="main-panel">
-        <header className="topbar"><div className="breadcrumb">COSMOS <span>/</span> CONTROL CORE</div><div className="system-pill"><span className="status-dot" /> {status}</div></header>
+        <header className="topbar"><div className="breadcrumb">COSMOS <span>/</span> CONTROL CORE</div><div className="topbar-actions"><a className="reference-nav" href="/references">⌕ Reference Center <span>↗</span></a><div className="system-pill"><span className="status-dot" /> {status}</div></div></header>
         <div className="hero">
           <div className="eyebrow"><span /> PERSONAL INTELLIGENCE SYSTEM</div>
           <div className="planet-wrap" aria-hidden="true"><div className="orbit orbit-one" /><div className="orbit orbit-two" /><div className="planet"><div className="planet-shadow" /><div className="planet-glow" /></div><div className="satellite">✧</div></div>
