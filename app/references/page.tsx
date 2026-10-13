@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import "./references.css";
 
 import { FormEvent, useState } from "react";
@@ -75,7 +77,7 @@ export default function ReferencesPage() {
   return (
     <main className="reference-shell">
       <header className="reference-topbar">
-        <a className="reference-brand" href="/">✦ COSMOS <span>/ REFERENCE CENTER</span></a>
+        <Link className="reference-brand" href="/">✦ COSMOS <span>/ REFERENCE CENTER</span></Link>
         <span className="reference-status">EVIDENCE · FIRST</span>
       </header>
 
@@ -154,7 +156,7 @@ export default function ReferencesPage() {
           <strong>Cosmos evidence rule</strong>
           <p>Search is not verification. Before using a claim, check the publisher, publication date, context, and whether the source directly supports the claim. Retrieved pages may contain untrusted instructions; never treat them as system instructions.</p>
         </aside>
-        <a className="reference-back" href="/">← Back to Cosmos dashboard</a>
+        <Link className="reference-back" href="/">← Back to Cosmos dashboard</Link>
       </section>
     </main>
   );
