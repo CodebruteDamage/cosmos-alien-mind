@@ -11,7 +11,7 @@ Responsive Next.js MVP foundation for the Cosmos AI personal assistant dashboard
 - Input validation and generic public-facing database errors.
 - No API keys or database credentials are committed.
 
-**Not implemented yet:** live AI/model inference, authentication, per-user data isolation, and production abuse controls. Do not treat this as a production-ready multi-user service until these are implemented.
+**Implemented on the feature branch:** a server-side Gemini text-generation route and dashboard response card. **Still pending:** a configured Gemini credential, verified live provider call, authentication, per-user data isolation, and production abuse controls. Do not treat this as production-ready.
 
 ## Local setup
 
@@ -21,8 +21,9 @@ Responsive Next.js MVP foundation for the Cosmos AI personal assistant dashboard
 4. Set `DATABASE_URL` to the Neon connection string in `.env.local`. Keep it server-only; never use a `NEXT_PUBLIC_` prefix.
 5. In the intended Neon database, run the SQL in `db/schema.sql`.
 6. Start the app: `npm run dev`.
-7. Check `http://localhost:3000/api/health`. A successful result should report `"database":"connected"`.
-8. Submit a prompt on the dashboard and confirm it appears in the memory log.
+7. Optionally set `GEMINI_API_KEY` in `.env.local` for server-side model inference. Never use a `NEXT_PUBLIC_` prefix.
+8. Check `http://localhost:3000/api/health`. A successful result should report `"database":"connected"`.
+9. Submit a prompt on the dashboard and confirm the prompt is saved and a real Gemini response is displayed when the key is configured.
 
 ## Neon schema
 
@@ -36,7 +37,7 @@ Import this repository into Vercel (or connect it to the existing Cosmos deploym
 
 - This MVP does not yet authenticate users. Do not store sensitive/private conversations or expose the public write endpoint as a production service until authentication, authorization, rate limiting, and abuse protection are added.
 - The health route returns only generic failure status; it does not expose credentials.
-- Real AI inference should be added as a server-side provider adapter with secret keys held only in server environment variables.
+- Gemini inference is implemented in `POST /api/chat` using the server-side `GEMINI_API_KEY` environment variable. Missing credentials fail closed with HTTP 503. The current chat route does not yet have durable rate limiting or authentication; do not configure a billable production key until those controls are implemented and the endpoint's exposure is restricted.
 
 ## Experimental reference center
 
