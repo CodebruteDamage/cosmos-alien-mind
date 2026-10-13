@@ -16,6 +16,7 @@ export default function Home() {
   const [status, setStatus] = useState("Checking backend…");
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState("");
+  const [answer, setAnswer] = useState("");
 
   async function refresh() {
     try {
@@ -43,6 +44,7 @@ export default function Home() {
     if (!trimmed || saving) return;
     setSaving(true);
     setNotice("");
+    setAnswer("");
     try {
       const response = await fetch("/api/conversations", {
         method: "POST",
@@ -52,8 +54,17 @@ export default function Home() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "Could not save your message.");
       setMessage("");
-      setNotice("Saved to Neon. AI inference is not connected yet.");
+      setNotice("Prompt saved. Asking Gemini…");
       await refresh();
+      const aiResponse = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: trimmed }),
+      });
+      const aiData = await aiResponse.json();
+      if (!aiResponse.ok) throw new Error(aiData.error ?? "Gemini could not answer.");
+      setAnswer(aiData.answer);
+      setNotice("Response received from Google Gemini. The reply is not yet saved to conversation history.");
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Could not save your message.");
     } finally {
@@ -73,16 +84,17 @@ export default function Home() {
         <div className="sidebar-foot"><span className="status-dot" /> Private server-side connection<br /><span className="muted">Database status: {status}</span></div>
       </aside>
       <section className="main-panel">
-        <header className="topbar"><div className="breadcrumb">COSMOS <span>/</span> CONTROL CORE</div><div className="system-pill"><span className="status-dot" /> {status}</div></header>
+        <header className="topbar"><div className="breadcrumb">COSMOS <span>/</span> CONTROL CORE</div><div className="topbar-actions"><a className="reference-nav" href="/references">⌕ Reference Center <span>↗</span></a><div className="system-pill"><span className="status-dot" /> {status}</div></div></header>
         <div className="hero">
           <div className="eyebrow"><span /> PERSONAL INTELLIGENCE SYSTEM</div>
           <div className="planet-wrap" aria-hidden="true"><div className="orbit orbit-one" /><div className="orbit orbit-two" /><div className="planet"><div className="planet-shadow" /><div className="planet-glow" /></div><div className="satellite">✧</div></div>
           <h1>Think beyond<br /><em>the known.</em></h1>
           <p className="intro">Your Cosmos workspace is taking shape. Start a thought, save it to long-term storage, and connect live intelligence next.</p>
           <div className="capabilities"><div><span className="cap-icon">◈</span><strong>Neon memory</strong><small>Database connection status</small></div><div><span className="cap-icon">⌘</span><strong>Control core</strong><small>Server-side API foundation</small></div><div><span className="cap-icon">✧</span><strong>AI inference</strong><small>Provider connection pending</small></div></div>
-          <form className="prompt-box" onSubmit={submit}><label htmlFor="prompt">WHAT'S ON YOUR MIND?</label><textarea id="prompt" value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Ask Cosmos, capture an idea, or start a mission…" maxLength={20000} rows={3} /><div className="prompt-footer"><span>{message.length.toLocaleString()} / 20,000</span><button type="submit" disabled={saving || !message.trim()}>{saving ? "Saving…" : "Save to Cosmos  ↗"}</button></div></form>
+          <form className="prompt-box" onSubmit={submit}><label htmlFor="prompt">WHAT&apos;S ON YOUR MIND?</label><textarea id="prompt" value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Ask Cosmos, capture an idea, or start a mission…" maxLength={20000} rows={3} /><div className="prompt-footer"><span>{message.length.toLocaleString()} / 20,000</span><button type="submit" disabled={saving || !message.trim()}>{saving ? "Saving…" : "Save to Cosmos  ↗"}</button></div></form>
           {notice && <p className="notice" role="status">{notice}</p>}
-          <div className="disclaimer">Honest status: message storage works only after Neon is configured and the schema is applied. This MVP does not yet generate AI answers.</div>
+          {answer && <section className="answer-card" aria-live="polite"><div className="answer-heading"><span>✧</span> COSMOS · GEMINI RESPONSE</div><div className="answer-content">{answer}</div></section>}
+          <div className="disclaimer">Honest status: prompts are saved to Neon when configured. Gemini replies require GEMINI_API_KEY in the server environment. AI suggestions do not authorize external actions.</div>
         </div>
         <footer className="footer"><span>ALIEN MIND · MVP</span><span>OBSERVE · VERIFY · EVOLVE</span></footer>
       </section>
