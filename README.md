@@ -62,3 +62,25 @@ The swarm API is a server-to-server endpoint for node health heartbeats and repl
 ### Tests
 
 Run `npm test` with Node.js 22.7+ (the built-in TypeScript type-strip test runner) and `npm run lint` / `npm run build`. The swarm endpoints return 503 until both `COSMOS_SWARM_TOKEN`, `DATABASE_URL`, and the migration are configured. No deployment or live database test is implied by a passing unit test.
+
+
+## COSMOS bounded workflow runtime (prototype)
+
+The `lib/workflow-runtime.ts` module is the first executable slice of the autonomous workflow engine. It runs a declared sequence through explicitly registered capability handlers and emits structured lifecycle events.
+
+- Validates workflow IDs, step IDs, capability names, step counts, timeouts, retry counts, and runtime budgets.
+- Calls a host-supplied policy callback before each step; denied work is blocked before its handler runs.
+- Does not permit delete, high-risk, or critical-risk steps in unattended mode.
+- Requires each handler to return `verified: true`; an action response alone is not completion evidence.
+- Retries only when the step explicitly declares `retrySafe: true`, with a bounded retry count and a stable workflow/step idempotency key.
+- Records started, verified, failed, blocked, and completed lifecycle events.
+
+### Important limits
+
+This is a prototype execution library, not yet a durable production orchestrator. It does not currently provide persistent workflow state, distributed locking, a durable queue, connector credentials, tenant identity, a scheduler, or automatic rollback of arbitrary external side effects. A timeout can abort a handler through `AbortSignal`, but a handler that ignores cancellation may still continue running. Use only controlled test handlers until the host runtime and integration tests are in place.
+
+The intent is **no routine human approval gate for explicitly pre-authorized low-risk workflows**, not unrestricted autonomy. Policy enforcement, least-privilege credentials, budgets, kill switch, and verified postconditions remain mandatory.
+
+### Test
+
+Run `npm test` with Node.js 22.7+ to execute the swarm-contract and workflow-runtime unit tests. Tests have been authored but must be run in an authorized execution environment before claiming a pass. No deployment or production integration is implied.
