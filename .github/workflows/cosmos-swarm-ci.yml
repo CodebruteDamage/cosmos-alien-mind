@@ -1,0 +1,44 @@
+name: COSMOS Swarm CI
+
+on:
+  push:
+    branches:
+      - feat/live-data-swarm
+  pull_request:
+    branches:
+      - main
+      - feat/live-data-swarm
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cosmos-swarm-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Test, lint, and production build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Run contract tests
+        run: npm test
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Build production bundle
+        run: npm run build
