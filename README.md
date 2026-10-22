@@ -61,4 +61,4 @@ The swarm API is a server-to-server endpoint for node health heartbeats and repl
 
 ### Tests
 
-Run `npm test` with Node.js 22.6+ (the built-in TypeScript type-strip test runner) and `npm run lint` / `npm run build`. The swarm endpoints return 503 until both `COSMOS_SWARM_TOKEN`, `DATABASE_URL`, and the migration are configured. No deployment or live database test is implied by a passing unit test.
+Run `npm test` with Node.js 22.7+ (the built-in TypeScript type-strip test runner) and `npm run lint` / `npm run build`. The swarm endpoints return 503 until both `COSMOS_SWARM_TOKEN`, `DATABASE_URL`, and the migration are configured. No deployment or live database test is implied by a passing unit test.
