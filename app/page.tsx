@@ -164,7 +164,7 @@ export default function Home() {
   // Data-derived JEV Matrix reacts when node health, telemetry, or replay cursor changes.
   const matrixCells = Array.from({ length: 96 }, (_, index) => {
     const node = nodes.length ? nodes[index % nodes.length] : undefined;
-    const event = events.length ? events[(index * 7) % events.length] : undefined;
+    const event = events.length ? events[(index * 7 + cursor) % events.length] : undefined;
     const active = swarmState === "connected" && (index < nodes.length * 4 || index < events.length * 2);
     const level = !active ? 0 : node?.status === "offline" ? 1 : node?.status === "degraded" ? 2 : event ? 4 : 3;
     return { index, level, active, nodeId: node?.nodeId, eventType: event?.event_type };
