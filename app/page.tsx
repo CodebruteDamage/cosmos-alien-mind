@@ -161,6 +161,15 @@ export default function Home() {
   const degradedCount = nodes.filter((node) => node.status === "degraded").length;
   const offlineCount = nodes.filter((node) => node.status === "offline").length;
 
+  // Data-derived JEV Matrix reacts when node health, telemetry, or replay cursor changes.
+  const matrixCells = Array.from({ length: 96 }, (_, index) => {
+    const node = nodes.length ? nodes[index % nodes.length] : undefined;
+    const event = events.length ? events[(index * 7) % events.length] : undefined;
+    const active = swarmState === "connected" && (index < nodes.length * 4 || index < events.length * 2);
+    const level = !active ? 0 : node?.status === "offline" ? 1 : node?.status === "degraded" ? 2 : event ? 4 : 3;
+    return { index, level, active, nodeId: node?.nodeId, eventType: event?.event_type };
+  });
+
   return (
     <main className="shell">
       <aside className="sidebar">
@@ -185,6 +194,17 @@ export default function Home() {
             <article className="metric-card"><div className="metric-label">ONLINE</div><div className="metric-value success-text">{swarmState === "connected" ? onlineCount : "—"}</div><div className="metric-foot">Heartbeat age ≤ 30 sec</div><span className="metric-symbol">◉</span></article>
             <article className="metric-card"><div className="metric-label">DEGRADED</div><div className="metric-value warning-text">{swarmState === "connected" ? degradedCount : "—"}</div><div className="metric-foot">Stale or reduced health</div><span className="metric-symbol">△</span></article>
             <article className="metric-card"><div className="metric-label">OFFLINE</div><div className="metric-value danger-text">{swarmState === "connected" ? offlineCount : "—"}</div><div className="metric-foot">Heartbeat age &gt; 90 sec</div><span className="metric-symbol">⊘</span></article>
+          </section>
+
+          <section className="panel jev-panel" aria-labelledby="jev-title">
+            <div className="section-heading">
+              <div><div className="eyebrow">00 / REACTIVE SIGNAL FIELD</div><h2 id="jev-title">JEV Matrix <em className="matrix-live-word">autoreact</em></h2><p>Micro-square signals recompute from live node health, telemetry volume, and the event cursor.</p></div>
+              <div className={"matrix-state " + (swarmState === "connected" ? "is-live" : "")}><span />{swarmState === "connected" ? "DATA LINK ACTIVE" : "AWAITING DATA"}</div>
+            </div>
+            <div className={"jev-matrix " + (swarmState === "connected" ? "matrix-connected" : "")} role="img" aria-label={"JEV Matrix with 96 signal cells; " + onlineCount + " online, " + degradedCount + " degraded, " + offlineCount + " offline nodes"}>
+              {matrixCells.map((cell) => <span key={cell.index} className={"matrix-cell level-" + cell.level + (cell.active ? " cell-active" : "")} title={cell.nodeId ? cell.nodeId + (cell.eventType ? " · " + cell.eventType : "") : "Awaiting live telemetry"} />)}
+            </div>
+            <div className="matrix-legend"><span><i className="legend-online" />Healthy signal</span><span><i className="legend-degraded" />Degraded signal</span><span><i className="legend-offline" />Offline signal</span><span className="matrix-footnote">{swarmState === "connected" ? nodes.length + " nodes · " + events.length + " events · cursor " + cursor : "Preview idle · connect to activate data-driven cells"}</span></div>
           </section>
 
           <section className="panel swarm-panel" id="swarm">
