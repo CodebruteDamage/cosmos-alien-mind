@@ -142,7 +142,9 @@ export async function executeWorkflow(
     try {
       decision = options.authorize(step, workflow);
     } catch {
-      const error = "Policy evaluation failed; execution was blocked.";\n      emit("step.blocked", step.id, { reason: error });\n      return { workflowId: workflow.id, status: "blocked", outputs, events, error };
+      const error = "Policy evaluation failed; execution was blocked.";
+      emit("step.blocked", step.id, { reason: error });
+      return { workflowId: workflow.id, status: "blocked", outputs, events, error };
     }
     if (!decision.allowed) {
       emit("step.blocked", step.id, { reason: decision.reason, capability: step.capability });
