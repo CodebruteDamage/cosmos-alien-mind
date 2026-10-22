@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
     `;
 
     return NextResponse.json(
-      { ok: true, node: rows[0], acceptedEvents: parsed.data.events.length },
+      { ok: true, node: rows[0], receivedEvents: parsed.data.events.length },
       { status: 202, headers: { "Cache-Control": "no-store" } },
     );
   } catch {
