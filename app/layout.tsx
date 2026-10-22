@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Cosmos Alien Mind",
-  description: "Cosmos AI personal assistant and control dashboard.",
+  title: "COSMOS · Alien Mind Ultimate",
+  description: "Alien Mind Ultimate live operations dashboard for Cosmos node health, telemetry, and memory.",
 };
 
 export const viewport: Viewport = {
