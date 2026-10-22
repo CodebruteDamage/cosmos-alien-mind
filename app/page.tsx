@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import NodeSwarm from "@/components/NodeSwarm";
 
 type Conversation = {
   id: string;
@@ -84,6 +85,7 @@ export default function Home() {
           {notice && <p className="notice" role="status">{notice}</p>}
           <div className="disclaimer">Honest status: message storage works only after Neon is configured and the schema is applied. This MVP does not yet generate AI answers.</div>
         </div>
+        <NodeSwarm />
         <footer className="footer"><span>ALIEN MIND · MVP</span><span>OBSERVE · VERIFY · EVOLVE</span></footer>
       </section>
     </main>
