@@ -126,3 +126,13 @@
 @keyframes matrix-scan{0%{top:0}100%{top:100%}}
 @media(max-width:760px){.jev-panel{padding:15px}.jev-matrix{grid-template-columns:repeat(16,minmax(0,1fr));gap:4px;padding:10px}.matrix-footnote{width:100%;margin-left:0}}
 @media(prefers-reduced-motion:reduce){.matrix-cell,.matrix-state span,.jev-matrix:after{animation:none!important;transition:none!important}}
+
+
+/* Local simulation controls — never imply that fixtures are production telemetry. */
+.matrix-actions{display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin-top:14px;position:relative;z-index:1}
+.matrix-actions>span{font:9px 'DM Mono',monospace;color:#71809e;margin-left:auto}
+.simulate-button{border:1px solid #54f2dd52;border-radius:8px;padding:10px 13px;background:linear-gradient(100deg,#153e46,#192647);color:#9bf8eb;font-weight:700;font-size:10px;cursor:pointer;box-shadow:inset 0 0 20px #50f0db0b,0 0 20px #50f0db08}
+.simulate-button:hover{border-color:#65f6e2;box-shadow:0 0 18px #50f0db1e}
+.simulate-button:focus-visible,.quiet-button:focus-visible{outline:2px solid #75f5e7;outline-offset:3px}
+.connection-badge.simulated{color:#80f0e2;border-color:#54f2dd52}
+@media(max-width:760px){.matrix-actions>span{width:100%;margin-left:0}}
