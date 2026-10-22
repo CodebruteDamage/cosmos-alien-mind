@@ -37,3 +37,27 @@ Import this repository into Vercel (or connect it to the existing Cosmos deploym
 - This MVP does not yet authenticate users. Do not store sensitive/private conversations or expose the public write endpoint as a production service until authentication, authorization, rate limiting, and abuse protection are added.
 - The health route returns only generic failure status; it does not expose credentials.
 - Real AI inference should be added as a server-side provider adapter with secret keys held only in server environment variables.
+
+
+## COSMOS Live Data Swarm (preview implementation)
+
+The swarm API is a server-to-server endpoint for node health heartbeats and replayable telemetry events. It does not make the existing dashboard authenticated; do not expose the bearer token to browser code.
+
+### Configure safely
+
+1. Review `db/swarm-schema.sql` and apply it to the intended Neon database. This is an additive migration and leaves the conversation tables intact.
+2. Create a cryptographically random token of at least 32 characters. Set it as the server-only `COSMOS_SWARM_TOKEN` in Vercel Preview and Production, and as `COSMOS_SWARM_TOKEN` in the trusted local node agent's environment. Never use a `NEXT_PUBLIC_` prefix, commit the value, or paste it into logs.
+3. Keep `DATABASE_URL` configured server-side with the Neon connection string.
+4. Deploy the feature branch to a Preview deployment and verify the API before merging.
+
+### API contract
+
+- `POST /api/swarm` — authenticated node heartbeat plus up to 20 idempotent telemetry events. Requires `Authorization: Bearer <COSMOS_SWARM_TOKEN>`.
+- `GET /api/swarm` — with no `after` query parameter, returns a node snapshot and sequence cursor; with `?after=<cursor>&limit=100`, returns ordered incremental events for replay. The maximum page size is 500.
+- Node freshness is derived from server-recorded heartbeat time: online up to 30 seconds, degraded after 30 seconds, offline after 90 seconds. Freshness is reported by the snapshot endpoint.
+- Telemetry event IDs must be UUIDs. Duplicate telemetry event IDs are ignored. Consumers should persist their last cursor and replay until `hasMore` is false after reconnecting.
+- Use bounded polling for Vercel serverless deployments; do not hold a serverless function open indefinitely for SSE. All responses disable caching.
+
+### Tests
+
+Run `npm test` with Node.js 22.6+ (the built-in TypeScript type-strip test runner) and `npm run lint` / `npm run build`. The swarm endpoints return 503 until both `COSMOS_SWARM_TOKEN`, `DATABASE_URL`, and the migration are configured. No deployment or live database test is implied by a passing unit test.
