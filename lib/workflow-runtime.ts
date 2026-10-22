@@ -129,6 +129,7 @@ export async function executeWorkflow(
   }
 
   emit("workflow.started", undefined, { version: workflow.version, stepCount: workflow.steps.length });
+  let retriesUsed = 0;
 
   for (const step of workflow.steps) {
     if (now() - startedAt >= workflow.limits.maxDurationMs) {
@@ -137,7 +138,12 @@ export async function executeWorkflow(
       return { workflowId: workflow.id, status: "blocked", outputs, events, error };
     }
 
-    const decision = options.authorize(step, workflow);
+    let decision: PolicyDecision;
+    try {
+      decision = options.authorize(step, workflow);
+    } catch {
+      const error = "Policy evaluation failed; execution was blocked.";\n      emit("step.blocked", step.id, { reason: error });\n      return { workflowId: workflow.id, status: "blocked", outputs, events, error };
+    }
     if (!decision.allowed) {
       emit("step.blocked", step.id, { reason: decision.reason, capability: step.capability });
       return { workflowId: workflow.id, status: "blocked", outputs, events, error: decision.reason };
@@ -157,7 +163,8 @@ export async function executeWorkflow(
     }
 
     const configuredRetries = step.retries ?? 0;
-    const retries = step.retrySafe ? Math.min(configuredRetries, workflow.limits.maxRetries) : 0;
+    const retriesRemaining = Math.max(0, workflow.limits.maxRetries - retriesUsed);
+    const retries = step.retrySafe ? Math.min(configuredRetries, retriesRemaining) : 0;
     let succeeded = false;
     let lastError = "Step failed.";
     const idempotencyKey = (options.makeIdempotencyKey ?? ((workflowId, stepId) => `${workflowId}:${stepId}`))(workflow.id, step.id);
@@ -193,7 +200,7 @@ export async function executeWorkflow(
         break;
       } catch (error) {
         lastError = error instanceof Error ? error.message : "Unknown step error.";
-        emit("step.attempt_failed", step.id, { attempt: attempt + 1, reason: lastError });
+        emit("step.attempt_failed", step.id, { attempt: attempt + 1, reason: lastError });\n        if (attempt < retries) retriesUsed += 1;
       } finally {
         if (timeoutHandle) clearTimeout(timeoutHandle);
       }
