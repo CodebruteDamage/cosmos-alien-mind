@@ -6,15 +6,19 @@ export const maxDuration = 60;
 
 export async function GET() {
   const encoder = new TextEncoder();
+  let stopped = false;
+  let previous = "";
+  let timer: ReturnType<typeof setInterval> | undefined;
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
-      let stopped = false;
-      let previous = "";
       const send = (event: string, data: unknown) => {
-        if (!stopped) controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
+        if (!stopped) {
+          try { controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`)); }
+          catch { stopped = true; }
+        }
       };
-      send("ready", { service: "cosmos-node-stream", at: new Date().toISOString() });
       const poll = async () => {
+        if (stopped) return;
         if (!process.env.DATABASE_URL) {
           send("status", { ok: false, error: "database_not_configured" });
           return;
@@ -33,17 +37,14 @@ export async function GET() {
           send("status", { ok: false, error: "node_registry_unavailable" });
         }
       };
+      send("ready", { service: "cosmos-node-stream", at: new Date().toISOString() });
       await poll();
-      const timer = setInterval(() => { void poll(); }, 2500);
-      const close = () => {
-        stopped = true;
-        clearInterval(timer);
-        try { controller.close(); } catch { /* stream already closed */ }
-      };
-      // Request abort is wired by the route response signal below.
-      (controller as ReadableStreamDefaultController<Uint8Array> & { __close?: () => void }).__close = close;
+      if (!stopped) timer = setInterval(() => { void poll(); }, 2500);
     },
-    cancel() { /* platform closes the response stream */ },
+    cancel() {
+      stopped = true;
+      if (timer) clearInterval(timer);
+    },
   });
   return new Response(stream, {
     headers: {
