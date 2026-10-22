@@ -119,11 +119,12 @@ export default function Home() {
           setEvents((previous) => [...previous, ...data.events].slice(-80));
           cursorRef.current = Number(data.cursor ?? cursorRef.current);
           setCursor(cursorRef.current);
-          const snapshotResponse = await fetch("/api/swarm", { headers: { Authorization: "Bearer " + swarmToken }, cache: "no-store" });
-          if (snapshotResponse.ok) {
-            const snapshot = await snapshotResponse.json();
-            if (!cancelled && Array.isArray(snapshot.nodes)) setNodes(snapshot.nodes);
-          }
+        }
+        // Refresh server-computed heartbeat freshness every cycle, even when no events arrive.
+        const snapshotResponse = await fetch("/api/swarm", { headers: { Authorization: "Bearer " + swarmToken }, cache: "no-store" });
+        if (snapshotResponse.ok) {
+          const snapshot = await snapshotResponse.json();
+          if (!cancelled && Array.isArray(snapshot.nodes)) setNodes(snapshot.nodes);
         }
         setLastSync(new Date().toISOString());
         setSwarmMessage("Authenticated. Live node health and event replay are active.");
