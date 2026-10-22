@@ -160,7 +160,7 @@ export async function executeWorkflow(
     const retries = step.retrySafe ? Math.min(configuredRetries, workflow.limits.maxRetries) : 0;
     let succeeded = false;
     let lastError = "Step failed.";
-    const idempotencyKey = (options.makeIdempotencyKey ?? ((workflowId, stepId) => `${workflowId}:${workflowId.length}:${stepId}`))(workflow.id, step.id);
+    const idempotencyKey = (options.makeIdempotencyKey ?? ((workflowId, stepId) => `${workflowId}:${stepId}`))(workflow.id, step.id);
 
     for (let attempt = 0; attempt <= retries; attempt += 1) {
       if (now() - startedAt >= workflow.limits.maxDurationMs) {
