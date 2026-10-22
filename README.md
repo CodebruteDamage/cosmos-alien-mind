@@ -57,6 +57,7 @@ The swarm API is a server-to-server endpoint for node health heartbeats and repl
 - Node freshness is derived from server-recorded heartbeat time: online up to 30 seconds, degraded after 30 seconds, offline after 90 seconds. Freshness is reported by the snapshot endpoint.
 - Telemetry event IDs must be UUIDs. Duplicate telemetry event IDs are ignored. Consumers should persist their last cursor and replay until `hasMore` is false after reconnecting.
 - Use bounded polling for Vercel serverless deployments; do not hold a serverless function open indefinitely for SSE. All responses disable caching.
+- This initial endpoint uses one shared service token, so only trusted agents should receive it; it does not yet provide per-device identity, per-user dashboard sessions, or application-level rate limiting. Add per-node credentials and rate limiting before broad production exposure.
 
 ### Tests
 
