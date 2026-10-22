@@ -103,3 +103,14 @@ test("rejects duplicate step IDs before executing any capability", async () => {
   assert.equal(result.status, "blocked");
   assert.equal(invoked, false);
 });
+
+test("fails closed when the policy evaluator throws", async () => {
+  let invoked = false;
+  const result = await executeWorkflow(definition(), {
+    handlers: { "service.health.read": async () => { invoked = true; return { output: {}, verified: true }; } },
+    authorize: () => { throw new Error("policy service unavailable"); },
+  });
+  assert.equal(result.status, "blocked");
+  assert.equal(invoked, false);
+  assert.match(result.error ?? "", /policy evaluation failed/i);
+});
