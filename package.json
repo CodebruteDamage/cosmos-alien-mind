@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "test": "node --experimental-strip-types --test tests/swarm-contract.test.ts"
+    "test": "node --experimental-strip-types --test tests/swarm-contract.test.ts tests/workflow-runtime.test.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
