@@ -2,16 +2,14 @@ import { z } from "zod";
 
 /**
  * Shared API contracts for COSMOS module communication.
- * These schemas validate structure; they do not authenticate callers or
- * authorize operations. WARP GATE remains the authorization authority.
+ * Structural validation is not authentication or authorization.
  */
 const nonEmpty = z.string().trim().min(1);
-const isoTimestamp = z.string().refine(
-  (value) => Number.isFinite(Date.parse(value)),
-  "Expected a valid ISO-compatible timestamp",
-);
+const isoTimestamp = z.string().datetime({ offset: true });
 
 export const COSMOS_CONTRACT_VERSION = "1.0.0";
+
+const semanticVersion = z.string().regex(/^\d+\.\d+\.\d+$/);
 
 export const CosmosRequestEnvelopeSchema = z.object({
   requestId: z.string().uuid(),
@@ -22,7 +20,7 @@ export const CosmosRequestEnvelopeSchema = z.object({
   targetModule: nonEmpty,
   operation: nonEmpty,
   scope: z.array(nonEmpty).min(1),
-  contractVersion: z.string().regex(/^\\d+\\.\\d+\\.\\d+$/),
+  contractVersion: semanticVersion,
   requestedAt: isoTimestamp,
   authorizationRef: nonEmpty.optional(),
 }).strict();
@@ -43,7 +41,7 @@ export type CosmosApiError = z.infer<typeof CosmosApiErrorSchema>;
 export const CosmosApiResponseMetaSchema = z.object({
   requestId: z.string().uuid(),
   correlationId: z.string().uuid(),
-  contractVersion: z.string().regex(/^\\d+\\.\\d+\\.\\d+$/),
+  contractVersion: semanticVersion,
   servedAt: isoTimestamp,
 }).strict();
 
