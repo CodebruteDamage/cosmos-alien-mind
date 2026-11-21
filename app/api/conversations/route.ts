@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { authenticateApiRequest } from "@/lib/cosmos/api-auth";
 import { getSql } from "@/lib/db";
 
 export const runtime = "nodejs";
@@ -10,7 +11,17 @@ const createConversationSchema = z.object({
   message: z.string().trim().min(1).max(20000),
 });
 
-export async function GET() {
+function authenticationError(reason: string, status: 401 | 503) {
+  const message = status === 503
+    ? "Authentication is not configured. Conversation access is temporarily unavailable."
+    : "A valid authenticated session is required.";
+  return NextResponse.json({ error: { code: reason, message } }, { status });
+}
+
+export async function GET(request: NextRequest) {
+  const auth = await authenticateApiRequest(request);
+  if (!auth.ok) return authenticationError(auth.reason, auth.status);
+
   if (!process.env.DATABASE_URL) {
     return NextResponse.json({ error: "Database is not configured." }, { status: 503 });
   }
@@ -21,19 +32,24 @@ export async function GET() {
       SELECT c.id, c.title, c.created_at, c.updated_at,
         (SELECT COUNT(*)::int FROM messages m WHERE m.conversation_id = c.id) AS message_count
       FROM conversations c
+      WHERE c.tenant_id = ${auth.principal.tenantId}
+        AND c.owner_subject = ${auth.principal.subject}
       ORDER BY c.updated_at DESC
       LIMIT 50
     `;
     return NextResponse.json({ conversations: rows });
   } catch {
     return NextResponse.json(
-      { error: "Could not load conversations. Confirm the Neon schema has been applied." },
+      { error: "Could not load conversations. Confirm the tenant-isolation migration has been applied." },
       { status: 503 },
     );
   }
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await authenticateApiRequest(request);
+  if (!auth.ok) return authenticationError(auth.reason, auth.status);
+
   if (!process.env.DATABASE_URL) {
     return NextResponse.json({ error: "Database is not configured." }, { status: 503 });
   }
@@ -54,7 +70,8 @@ export async function POST(request: NextRequest) {
     const sql = getSql();
     const title = parsed.data.title ?? parsed.data.message.slice(0, 72);
     const conversations = await sql`
-      INSERT INTO conversations (title) VALUES (${title})
+      INSERT INTO conversations (title, tenant_id, owner_subject)
+      VALUES (${title}, ${auth.principal.tenantId}, ${auth.principal.subject})
       RETURNING id, title, created_at, updated_at
     `;
     const conversation = conversations[0];
@@ -65,7 +82,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ conversation, stored: true }, { status: 201 });
   } catch {
     return NextResponse.json(
-      { error: "Could not save the conversation. Confirm the Neon schema has been applied." },
+      { error: "Could not save the conversation. Confirm the tenant-isolation migration has been applied." },
       { status: 503 },
     );
   }
