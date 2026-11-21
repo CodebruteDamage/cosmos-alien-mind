@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getSql } from "@/lib/db";
+import { authorizeWebhookEvent } from "@/lib/webhooks/authorization";
 import { verifyWebhookSignature } from "@/lib/webhooks/security";
 import { getWebhookIntegration } from "@/lib/webhooks/registry";
 
@@ -8,6 +9,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const MAX_BODY_BYTES = 64 * 1024;
+const POLICY_VERSION = "webhook-policy-v1";
 const eventSchema = z.object({
   event_id: z.string().min(1).max(128).regex(/^[A-Za-z0-9._:-]+$/),
   event_type: z.string().min(1).max(128).regex(/^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$/),
@@ -72,13 +74,12 @@ export async function POST(request: NextRequest) {
     }
 
     const secret = process.env[integration.secretEnvVar];
-    const validSignature = verifyWebhookSignature(
+    if (!verifyWebhookSignature(
       rawBody,
       request.headers.get("x-cosmos-timestamp"),
       request.headers.get("x-cosmos-signature"),
       secret ?? "",
-    );
-    if (!validSignature) {
+    )) {
       return NextResponse.json({ error: "Invalid webhook authentication." }, { status: 401 });
     }
 
@@ -93,21 +94,48 @@ export async function POST(request: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json({ error: "Invalid event envelope." }, { status: 400 });
     }
-    if (!integration.allowedEventTypes.includes(parsed.data.event_type)) {
-      return NextResponse.json({ error: "Event type is not authorized." }, { status: 403 });
+
+    const event = parsed.data;
+    const eventPolicy = integration.eventPolicies[event.event_type];
+    const authorization = eventPolicy && integration.allowedEventTypes.includes(event.event_type)
+      ? authorizeWebhookEvent(integration, {
+          eventType: event.event_type,
+          operation: eventPolicy.operation,
+          targetScope: eventPolicy.targetScope,
+          riskClass: eventPolicy.riskClass,
+        })
+      : { allowed: false as const, reason: "event_type_not_allowed" as const };
+
+    await sql`
+      INSERT INTO cosmos_webhook_authorization_audit
+        (event_id, integration_id, tenant_id, event_type, decision, reason_code, policy_version)
+      VALUES (
+        ${event.event_id},
+        ${integration.integrationId},
+        ${integration.tenantId},
+        ${event.event_type},
+        ${authorization.allowed ? "allow" : "deny"},
+        ${authorization.allowed ? "allowed" : authorization.reason},
+        ${POLICY_VERSION}
+      )
+      ON CONFLICT (integration_id, event_id, decision) DO NOTHING
+    `;
+
+    if (!authorization.allowed) {
+      return NextResponse.json({ error: "Event is not authorized by policy." }, { status: 403 });
     }
 
     const inserted = await sql`
       INSERT INTO cosmos_webhook_inbox
         (event_id, integration_id, tenant_id, source, event_type, occurred_at, payload, status)
       VALUES (
-        ${parsed.data.event_id},
+        ${event.event_id},
         ${integration.integrationId},
         ${integration.tenantId},
-        ${parsed.data.source},
-        ${parsed.data.event_type},
-        ${parsed.data.occurred_at},
-        ${JSON.stringify(parsed.data.payload)}::jsonb,
+        ${event.source},
+        ${event.event_type},
+        ${event.occurred_at},
+        ${JSON.stringify(event.payload)}::jsonb,
         'received'
       )
       ON CONFLICT (event_id) DO NOTHING
@@ -117,12 +145,13 @@ export async function POST(request: NextRequest) {
     if (inserted.length === 0) {
       return NextResponse.json({ accepted: true, duplicate: true }, { status: 200 });
     }
+    // An allow decision authorizes receipt under policy only; no operation executes here.
     return NextResponse.json(
       { accepted: true, duplicate: false, status: "received" },
       { status: 202 },
     );
   } catch {
-    // Registry/database errors fail closed; never acknowledge unpersisted events.
+    // Registry, audit, or database errors fail closed.
     return NextResponse.json({ error: "Webhook service is unavailable." }, { status: 503 });
   }
 }
