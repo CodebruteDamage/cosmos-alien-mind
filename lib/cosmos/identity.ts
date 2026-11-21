@@ -64,8 +64,16 @@ export async function authenticateRequest(
     return { ok: false, reason: "INVALID_PRINCIPAL" };
   }
 
-  if (Date.parse(parsed.data.expiresAt) <= now) {
+  const issuedAt = Date.parse(parsed.data.issuedAt);
+  const expiresAt = Date.parse(parsed.data.expiresAt);
+
+  if (expiresAt <= now || expiresAt <= issuedAt) {
     return { ok: false, reason: "PRINCIPAL_EXPIRED" };
+  }
+
+  // Allow only a small clock-skew tolerance; future-issued claims are invalid.
+  if (issuedAt > now + 60_000) {
+    return { ok: false, reason: "INVALID_PRINCIPAL" };
   }
 
   return { ok: true, principal: parsed.data };
