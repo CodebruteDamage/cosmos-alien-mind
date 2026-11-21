@@ -32,7 +32,7 @@ export function parseEventPolicies(
   value: unknown,
   tenantId: string,
 ): Record<string, EventPolicy> | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  if (!value || typeof value !== "object" || Array.isArray(value) || !tenantId.trim()) return null;
   const policies: Record<string, EventPolicy> = {};
   for (const [eventType, raw] of Object.entries(value)) {
     if (!EVENT_PATTERN.test(eventType) || !raw || typeof raw !== "object" || Array.isArray(raw)) return null;
@@ -52,27 +52,16 @@ export function parseEventPolicies(
   return policies;
 }
 
-/** Resolve identity and policy only from the server-controlled registry. */
-export async function getWebhookIntegration(
-  sql: ReturnType<typeof getSql>,
-  keyId: string,
-): Promise<WebhookIntegrationRecord | null> {
-  const rows = await sql`
-    SELECT integration_id, tenant_id, secret_env_var, allowed_event_types,
-           event_policies, enabled
-    FROM cosmos_webhook_integrations
-    WHERE key_id = ${keyId}
-    LIMIT 1
-  `;
-  const row = rows[0] as {
-    integration_id: string;
-    tenant_id: string;
-    secret_env_var: string;
-    allowed_event_types: string[];
-    event_policies: unknown;
-    enabled: boolean;
-  } | undefined;
-  if (!row || !isValidSecretEnvVar(row.secret_env_var)) return null;
+function mapIntegrationRow(row: {
+  integration_id: string;
+  tenant_id: string;
+  secret_env_var: string;
+  allowed_event_types: string[];
+  event_policies: unknown;
+  enabled: boolean;
+} | undefined): WebhookIntegrationRecord | null {
+  if (!row || !isValidSecretEnvVar(row.secret_env_var) ||
+      !row.integration_id?.trim() || !row.tenant_id?.trim()) return null;
   if (!Array.isArray(row.allowed_event_types) ||
       !row.allowed_event_types.every((v) => typeof v === "string")) return null;
   const eventPolicies = parseEventPolicies(row.event_policies, row.tenant_id);
@@ -92,4 +81,36 @@ export async function getWebhookIntegration(
     eventPolicies,
     enabled: row.enabled === true,
   };
+}
+
+type RegistrySql = ReturnType<typeof getSql>;
+
+/** Resolve identity and policy only from the server-controlled registry. */
+export async function getWebhookIntegration(
+  sql: RegistrySql,
+  keyId: string,
+): Promise<WebhookIntegrationRecord | null> {
+  const rows = await sql`
+    SELECT integration_id, tenant_id, secret_env_var, allowed_event_types,
+           event_policies, enabled
+    FROM cosmos_webhook_integrations
+    WHERE key_id = ${keyId}
+    LIMIT 1
+  `;
+  return mapIntegrationRow(rows[0] as Parameters<typeof mapIntegrationRow>[0]);
+}
+
+/** Re-resolve current policy by immutable integration ID before worker dispatch. */
+export async function getWebhookIntegrationById(
+  sql: RegistrySql,
+  integrationId: string,
+): Promise<WebhookIntegrationRecord | null> {
+  const rows = await sql`
+    SELECT integration_id, tenant_id, secret_env_var, allowed_event_types,
+           event_policies, enabled
+    FROM cosmos_webhook_integrations
+    WHERE integration_id = ${integrationId}
+    LIMIT 1
+  `;
+  return mapIntegrationRow(rows[0] as Parameters<typeof mapIntegrationRow>[0]);
 }
