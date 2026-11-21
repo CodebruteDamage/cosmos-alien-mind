@@ -37,3 +37,14 @@ Import this repository into Vercel (or connect it to the existing Cosmos deploym
 - This MVP does not yet authenticate users. Do not store sensitive/private conversations or expose the public write endpoint as a production service until authentication, authorization, rate limiting, and abuse protection are added.
 - The health route returns only generic failure status; it does not expose credentials.
 - Real AI inference should be added as a server-side provider adapter with secret keys held only in server environment variables.
+
+## Webhook security foundation (branch-only)
+
+A disabled-by-default inbound webhook security foundation is proposed in
+`feat/cosmos-webhook-gap-closure`. It verifies timestamped HMAC-SHA256 signatures,
+validates a strict event envelope, and persists unique events to a PostgreSQL inbox.
+The route remains disabled unless `COSMOS_WEBHOOK_ENABLED=true` is explicitly set
+in a server-side environment. The included SQL migration requires manual review
+and application. This is not a production-ready multi-tenant webhook service:
+per-integration identity, tenant isolation, WARP GATE authorization, workers,
+rate limiting, retention, and operational recovery remain future gates.
