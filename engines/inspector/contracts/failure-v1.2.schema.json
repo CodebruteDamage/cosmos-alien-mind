@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cosmos.example/schemas/inspector-failure-1.2.schema.json",
+  "title": "COSMOS INSPECTOR Failure v1.2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ok",
+    "code",
+    "message",
+    "disposition"
+  ],
+  "properties": {
+    "ok": {
+      "const": false
+    },
+    "code": {
+      "enum": [
+        "INS-D001",
+        "INS-D002",
+        "INS-D003",
+        "INS-D004",
+        "INS-D005",
+        "INS-D006",
+        "INS-D007",
+        "INS-D008",
+        "INS-D009",
+        "INS-D010"
+      ]
+    },
+    "message": {
+      "type": "string",
+      "minLength": 1
+    },
+    "disposition": {
+      "enum": [
+        "BLOCKED",
+        "FAILED",
+        "INCOMPLETE"
+      ]
+    }
+  }
+}
