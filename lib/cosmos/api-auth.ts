@@ -17,8 +17,9 @@ export type ApiAuthResult =
 export async function authenticateApiRequest(
   request: Request,
   provider = getIdentityProvider(),
+  now: number = Date.now(),
 ): Promise<ApiAuthResult> {
-  const result = await authenticateRequest(request, provider);
+  const result = await authenticateRequest(request, provider, now);
   if (result.ok) return result;
 
   return {
