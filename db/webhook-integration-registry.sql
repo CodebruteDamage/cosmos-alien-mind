@@ -40,18 +40,21 @@ CREATE TABLE IF NOT EXISTS cosmos_webhook_authorization_audit (
   decision_stage TEXT NOT NULL CHECK (decision_stage IN ('ingress', 'dispatch')),
   decision TEXT NOT NULL CHECK (decision IN ('allow', 'deny')),
   reason_code TEXT NOT NULL,
+  approval_reference TEXT,
   policy_version TEXT NOT NULL DEFAULT 'webhook-policy-v1',
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 ALTER TABLE cosmos_webhook_authorization_audit
-  ADD COLUMN IF NOT EXISTS decision_stage TEXT NOT NULL DEFAULT 'ingress';
+  ADD COLUMN IF NOT EXISTS decision_stage TEXT NOT NULL DEFAULT 'ingress',
+  ADD COLUMN IF NOT EXISTS approval_reference TEXT;
 
 ALTER TABLE cosmos_webhook_authorization_audit
   DROP CONSTRAINT IF EXISTS cosmos_webhook_authorization_audit_integration_id_event_id_decision_key;
 
-CREATE UNIQUE INDEX IF NOT EXISTS cosmos_webhook_audit_event_stage_idx
-  ON cosmos_webhook_authorization_audit (integration_id, event_id, decision_stage);
+DROP INDEX IF EXISTS cosmos_webhook_audit_event_stage_idx;
+CREATE INDEX IF NOT EXISTS cosmos_webhook_audit_event_stage_idx
+  ON cosmos_webhook_authorization_audit (integration_id, event_id, decision_stage, created_at);
 
 CREATE INDEX IF NOT EXISTS cosmos_webhook_inbox_tenant_received_idx
   ON cosmos_webhook_inbox (tenant_id, status, received_at);
@@ -64,4 +67,5 @@ CREATE INDEX IF NOT EXISTS cosmos_webhook_audit_tenant_created_idx
   ON cosmos_webhook_authorization_audit (tenant_id, created_at);
 
 -- No integration is enabled by this migration. Secrets remain in server-side env.
--- Audit immutability still requires restricted database roles and operational review.
+-- Audit history is append-oriented; enforce DB-level immutability with restricted
+-- database roles before production use. Do not grant UPDATE/DELETE to app workers.
