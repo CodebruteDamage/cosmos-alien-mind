@@ -4,6 +4,7 @@ import {
   CosmosRequestEnvelopeSchema,
   CosmosApiErrorSchema,
 } from "../../lib/cosmos/api-contracts";
+import { authenticateApiRequest } from "../../lib/cosmos/api-auth";
 import {
   authenticateRequest,
   principalMatchesTenant,
@@ -102,4 +103,48 @@ test("accepts valid provider-verified principal claims", async () => {
 test("prevents cross-tenant principal matching", () => {
   assert.equal(principalMatchesTenant(validPrincipal, "tenant-a"), true);
   assert.equal(principalMatchesTenant(validPrincipal, "tenant-b"), false);
+});
+
+
+test("API auth boundary returns 503 while no trusted provider is configured", async () => {
+  const result = await authenticateApiRequest(request(), undefined, Date.parse("2026-11-21T12:00:00.000Z"));
+  assert.deepEqual(result, {
+    ok: false,
+    reason: "IDENTITY_PROVIDER_NOT_CONFIGURED",
+    status: 503,
+  });
+});
+
+test("API auth boundary rejects unverified provider failures with 401", async () => {
+  const provider: IdentityProvider = { verifyRequest: async () => { throw new Error("bad credential"); } };
+  const result = await authenticateApiRequest(request(), provider, Date.parse("2026-11-21T12:00:00.000Z"));
+  assert.deepEqual(result, {
+    ok: false,
+    reason: "CREDENTIAL_REJECTED",
+    status: 401,
+  });
+});
+
+test("API auth boundary accepts only trusted provider claims", async () => {
+  const provider: IdentityProvider = { verifyRequest: async () => validPrincipal };
+  const result = await authenticateApiRequest(request(), provider, Date.parse("2026-11-21T12:00:00.000Z"));
+  assert.equal(result.ok, true);
+  if (result.ok) {
+    assert.equal(result.principal.tenantId, "tenant-a");
+    assert.equal(result.principal.subject, "user-01");
+  }
+});
+
+test("rejects principals issued beyond the clock-skew allowance", async () => {
+  const provider: IdentityProvider = {
+    verifyRequest: async () => ({
+      ...validPrincipal,
+      issuedAt: "2026-11-21T12:02:00.000Z",
+      expiresAt: "2026-11-21T13:00:00.000Z",
+    }),
+  };
+  assert.deepEqual(await authenticateRequest(request(), provider, Date.parse("2026-11-21T12:00:00.000Z")), {
+    ok: false,
+    reason: "INVALID_PRINCIPAL",
+  });
 });
