@@ -46,7 +46,8 @@ function dependencies(overrides: Partial<WebhookWorkerDependencies> = {}) {
   const base: WebhookWorkerDependencies = {
     loadIntegration: async () => integration,
     recordDecision: async () => { calls.audited += 1; },
-    execute: async (_event, _authorization, key) => {
+    isOperationRegistered: () => true,
+    execute: async (_event, _policy, _authorization, key) => {
       calls.executed += 1;
       calls.idempotencyKey = key;
     },
@@ -103,6 +104,20 @@ test("denies high-risk events when trusted approval is unavailable", async () =>
     reason: "human_approval_required",
   });
   assert.equal(calls.executed, 0);
+});
+
+test("denies operations without a registered handler", async () => {
+  const { calls, dependencies: deps } = dependencies({
+    isOperationRegistered: () => false,
+  });
+  const result = await processClaimedWebhookEvent(event, deps);
+  assert.deepEqual(result, {
+    eventId: "evt-100",
+    status: "denied",
+    reason: "operation_handler_unavailable",
+  });
+  assert.equal(calls.executed, 0);
+  assert.equal(calls.quarantined, 1);
 });
 
 test("does not dispatch when the audit service is unavailable", async () => {
