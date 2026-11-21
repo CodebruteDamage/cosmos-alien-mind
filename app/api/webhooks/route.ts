@@ -120,7 +120,6 @@ export async function POST(request: NextRequest) {
         ${authorization.allowed ? "allowed" : authorization.reason},
         ${POLICY_VERSION}
       )
-      ON CONFLICT (integration_id, event_id, decision_stage) DO NOTHING
     `;
 
     if (!authorization.allowed) {
