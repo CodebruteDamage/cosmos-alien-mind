@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "test": "tsx --test tests/webhooks/security.test.ts"
+    "test": "tsx --test tests/webhooks/*.test.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
