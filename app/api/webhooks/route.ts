@@ -108,17 +108,19 @@ export async function POST(request: NextRequest) {
 
     await sql`
       INSERT INTO cosmos_webhook_authorization_audit
-        (event_id, integration_id, tenant_id, event_type, decision, reason_code, policy_version)
+        (event_id, integration_id, tenant_id, event_type, decision_stage,
+         decision, reason_code, policy_version)
       VALUES (
         ${event.event_id},
         ${integration.integrationId},
         ${integration.tenantId},
         ${event.event_type},
+        'ingress',
         ${authorization.allowed ? "allow" : "deny"},
         ${authorization.allowed ? "allowed" : authorization.reason},
         ${POLICY_VERSION}
       )
-      ON CONFLICT (integration_id, event_id, decision) DO NOTHING
+      ON CONFLICT (integration_id, event_id, decision_stage) DO NOTHING
     `;
 
     if (!authorization.allowed) {
@@ -145,13 +147,11 @@ export async function POST(request: NextRequest) {
     if (inserted.length === 0) {
       return NextResponse.json({ accepted: true, duplicate: true }, { status: 200 });
     }
-    // An allow decision authorizes receipt under policy only; no operation executes here.
     return NextResponse.json(
       { accepted: true, duplicate: false, status: "received" },
       { status: 202 },
     );
   } catch {
-    // Registry, audit, or database errors fail closed.
     return NextResponse.json({ error: "Webhook service is unavailable." }, { status: 503 });
   }
 }
