@@ -1,55 +1,35 @@
-# COSMOS Webhook Ingress — Security Foundation
+# COSMOS Webhook — integration registry foundation
 
-Status: branch-only implementation proposal; not deployed or enabled.
+Status: feature-branch implementation only. Disabled by default; not deployed.
 
-## Current scope
+## Integration identity
 
-This change adds a disabled-by-default inbound webhook route with:
-- timestamped HMAC-SHA256 verification over the exact raw request body;
-- a five-minute timestamp tolerance and constant-time digest comparison;
-- a 64 KiB request-body limit;
-- strict event-envelope validation;
-- a durable PostgreSQL inbox insert with event-ID deduplication;
-- fail-closed behavior when configuration or storage is unavailable.
+The ingress route now requires `x-cosmos-key-id`. It resolves the key ID to a
+server-controlled integration record in `cosmos_webhook_integrations`. The
+record supplies integration ID, tenant ID, event-type allowlist, enabled flag,
+and the name of a server-side secret environment variable.
 
-## Activation guard
+The database stores the environment-variable reference, not the webhook secret.
+Secret names must match `COSMOS_WEBHOOK_SECRET_<ID>`; the corresponding value
+must contain at least 32 UTF-8 bytes. HMAC verification still signs the exact
+raw body with a timestamp and a five-minute tolerance.
 
-The route returns 404 unless the server-side environment variable
-`COSMOS_WEBHOOK_ENABLED` is exactly `true`. A server-side
-`COSMOS_WEBHOOK_SECRET` of at least 32 UTF-8 bytes is also required.
-Do not enable this route in production from this branch.
+The event body and its `source` field are untrusted. Tenant and integration
+identity are assigned only from the registry after signature verification.
+Unknown, disabled, malformed, or unconfigured integrations fail closed.
 
-## Signature contract
+## Database
 
-Headers:
-- `x-cosmos-timestamp`: ten-digit Unix timestamp in seconds.
-- `x-cosmos-signature`: `sha256=<hex digest>`.
-- `content-type`: `application/json`.
+Review `db/webhook-integration-registry.sql` and apply manually before testing
+against a database. It creates the registry and adds tenant/integration
+columns to the inbox. It does not enable any integration or activate the route.
 
-The HMAC-SHA256 input is the UTF-8 timestamp, a literal period, then the exact raw
-request bytes. The event body must contain `event_id`, `event_type`,
-`occurred_at`, `source`, and object-valued `payload`.
+## Remaining limitations
 
-The `source` property is untrusted event metadata. With this initial single-secret
-baseline it is not a verified provider or tenant identity.
-
-## Explicit limitations
-
-- One shared secret only; no per-provider credential registry or tenant isolation.
-- No rate limiter, outbound webhook sender, queue worker, event ordering, retry
-  scheduler, dead-letter processor, or retention job is included.
-- The database inbox status `received` means persisted, not authorized, queued,
-  processed, or executed.
-- No COSMOS Core or WARP GATE execution adapter is connected.
-- The SQL migration must be reviewed and applied manually to the intended database.
-- Do not store sensitive personal data in event payloads until data classification,
-  access controls, and retention are implemented.
-
-## Required next gates
-
-1. Implement per-integration identity and tenant mapping before multi-tenant use.
-2. Add explicit WARP GATE authorization before any processing or execution.
-3. Add durable worker/queue semantics, bounded retries, dead-letter handling,
-   and replay controls.
-4. Add rate limiting, secret rotation, audit integration, and retention controls.
-5. Run CI and security review; obtain human certification before production use.
+- Registry provisioning/rotation UI and secret manager integration are absent.
+- Rate limiting and per-integration quotas are absent.
+- WARP GATE runtime invocation and trusted approval-service integration are absent.
+- Durable worker leases, bounded retries, dead-letter processing and replay controls
+  are not implemented in this commit.
+- The inbox still records receipt only; it does not imply authorization or execution.
+- No endpoint is enabled, deployed, or exposed by this branch.
