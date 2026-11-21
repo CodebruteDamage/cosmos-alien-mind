@@ -4,7 +4,7 @@ import {
   type WebhookAuthorizationResult,
 } from "@/lib/webhooks/authorization";
 import type { ClaimedWebhookEvent } from "@/lib/webhooks/queue";
-import type { WebhookIntegrationRecord } from "@/lib/webhooks/registry";
+import type { EventPolicy, WebhookIntegrationRecord } from "@/lib/webhooks/registry";
 
 export interface WorkerAuditDecision {
   eventId: string;
@@ -17,18 +17,16 @@ export interface WorkerAuditDecision {
 }
 
 export interface WebhookWorkerDependencies {
-  /** Always resolve current registry policy; never trust a policy snapshot in the event. */
   loadIntegration(integrationId: string): Promise<WebhookIntegrationRecord | null>;
-  /** Must return a verifiable decision from the trusted approval service. */
   resolveApproval?(
     event: ClaimedWebhookEvent,
-    policy: WebhookIntegrationRecord["eventPolicies"][string],
+    policy: EventPolicy,
   ): Promise<TrustedApprovalDecision | null>;
-  /** Must append an audit record and reject on persistence failure. */
   recordDecision(decision: WorkerAuditDecision): Promise<void>;
-  /** Must dispatch only an explicitly registered operation handler and be idempotent by key. */
+  isOperationRegistered(operation: string): boolean;
   execute(
     event: ClaimedWebhookEvent,
+    policy: EventPolicy,
     authorization: Extract<WebhookAuthorizationResult, { allowed: true }>,
     idempotencyKey: string,
   ): Promise<void>;
@@ -43,10 +41,6 @@ export type WebhookWorkerResult =
   | { eventId: string; status: "retry_scheduled"; reason: string }
   | { eventId: string; status: "lease_lost" };
 
-/**
- * Re-evaluates current identity, tenant, event, operation, scope, risk, and approval
- * immediately before dispatch. No event payload field grants authority.
- */
 export async function processClaimedWebhookEvent(
   event: ClaimedWebhookEvent,
   dependencies: WebhookWorkerDependencies,
@@ -68,6 +62,9 @@ export async function processClaimedWebhookEvent(
   if (!denialReason && (!policy || !integration?.allowedEventTypes.includes(event.event_type))) {
     denialReason = "event_policy_missing";
   }
+  if (!denialReason && policy && !dependencies.isOperationRegistered(policy.operation)) {
+    denialReason = "operation_handler_unavailable";
+  }
 
   let approval: TrustedApprovalDecision | null = null;
   if (!denialReason && policy &&
@@ -88,7 +85,6 @@ export async function processClaimedWebhookEvent(
       }, approval)
     : { allowed: false as const, reason: denialReason ?? "event_policy_missing" };
 
-  const reasonCode = authorization.allowed ? "allowed" : authorization.reason;
   try {
     await dependencies.recordDecision({
       eventId: event.event_id,
@@ -96,7 +92,7 @@ export async function processClaimedWebhookEvent(
       tenantId: event.tenant_id,
       eventType: event.event_type,
       decision: authorization.allowed ? "allow" : "deny",
-      reasonCode,
+      reasonCode: authorization.allowed ? "allowed" : authorization.reason,
       ...(authorization.allowed && authorization.approvalReference
         ? { approvalReference: authorization.approvalReference }
         : {}),
@@ -118,7 +114,7 @@ export async function processClaimedWebhookEvent(
   }
 
   try {
-    await dependencies.execute(event, authorization, event.event_id);
+    await dependencies.execute(event, policy!, authorization, event.event_id);
   } catch {
     await dependencies.scheduleRetry(event.event_id, event.attempts, "handler_failed");
     return { eventId: event.event_id, status: "retry_scheduled", reason: "handler_failed" };
@@ -130,15 +126,12 @@ export async function processClaimedWebhookEvent(
     : { eventId: event.event_id, status: "lease_lost" };
 }
 
-/** Serial bounded batch dispatcher. The caller owns the queue claim/lease operation. */
 export async function dispatchClaimedWebhookBatch(
   events: readonly ClaimedWebhookEvent[],
   dependencies: WebhookWorkerDependencies,
 ): Promise<WebhookWorkerResult[]> {
   if (events.length > 100) throw new Error("worker batch exceeds maximum size");
   const results: WebhookWorkerResult[] = [];
-  for (const event of events) {
-    results.push(await processClaimedWebhookEvent(event, dependencies));
-  }
+  for (const event of events) results.push(await processClaimedWebhookEvent(event, dependencies));
   return results;
 }
