@@ -18,10 +18,6 @@ export function webhookRetryDelaySeconds(attempt: number): number {
   return Math.min(30 * 2 ** Math.min(attempt - 1, 20), MAX_RETRY_DELAY_SECONDS);
 }
 
-/**
- * Atomically leases a bounded batch. SKIP LOCKED prevents concurrent workers
- * from claiming the same row. This function does not authorize or execute events.
- */
 export async function claimWebhookBatch(
   sql: ReturnType<typeof getSql>,
   limit = 10,
@@ -36,7 +32,6 @@ export async function claimWebhookBatch(
     throw new Error("invalid maximum attempts");
   }
 
-  // Expired leases at the attempt ceiling must not remain stuck in processing.
   await sql`
     UPDATE cosmos_webhook_inbox
     SET status = 'dead_letter',
@@ -70,6 +65,40 @@ export async function claimWebhookBatch(
               inbox.event_type, inbox.payload, inbox.attempts
   `;
   return rows as unknown as ClaimedWebhookEvent[];
+}
+
+export async function markWebhookProcessed(
+  sql: ReturnType<typeof getSql>,
+  eventId: string,
+  attempt: number,
+): Promise<boolean> {
+  const rows = await sql`
+    UPDATE cosmos_webhook_inbox
+    SET status = 'processed', lease_until = NULL, last_error_code = NULL
+    WHERE event_id = ${eventId}
+      AND status = 'processing'
+      AND attempts = ${attempt}
+    RETURNING event_id
+  `;
+  return rows.length === 1;
+}
+
+export async function quarantineWebhookEvent(
+  sql: ReturnType<typeof getSql>,
+  eventId: string,
+  attempt: number,
+  reasonCode: string,
+): Promise<boolean> {
+  if (!/^[a-z0-9_]{1,64}$/.test(reasonCode)) throw new Error("invalid reason code");
+  const rows = await sql`
+    UPDATE cosmos_webhook_inbox
+    SET status = 'quarantined', lease_until = NULL, last_error_code = ${reasonCode}
+    WHERE event_id = ${eventId}
+      AND status = 'processing'
+      AND attempts = ${attempt}
+    RETURNING event_id
+  `;
+  return rows.length === 1;
 }
 
 /** Record a bounded retry without storing untrusted error text or secrets. */
