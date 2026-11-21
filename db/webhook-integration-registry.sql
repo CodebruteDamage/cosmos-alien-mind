@@ -1,4 +1,4 @@
--- COSMOS Webhook integration registry, tenant binding, and queue metadata.
+-- COSMOS Webhook integration registry, tenant binding, queue, and decision audit.
 -- Review and apply manually in the intended Neon database; never auto-applied.
 
 CREATE TABLE IF NOT EXISTS cosmos_webhook_integrations (
@@ -7,10 +7,14 @@ CREATE TABLE IF NOT EXISTS cosmos_webhook_integrations (
   tenant_id TEXT NOT NULL CHECK (length(tenant_id) BETWEEN 1 AND 128),
   secret_env_var TEXT NOT NULL CHECK (secret_env_var ~ '^COSMOS_WEBHOOK_SECRET_[A-Z0-9_]{1,64}$'),
   allowed_event_types TEXT[] NOT NULL DEFAULT '{}',
+  event_policies JSONB NOT NULL DEFAULT '{}'::jsonb,
   enabled BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE cosmos_webhook_integrations
+  ADD COLUMN IF NOT EXISTS event_policies JSONB NOT NULL DEFAULT '{}'::jsonb;
 
 ALTER TABLE cosmos_webhook_inbox
   ADD COLUMN IF NOT EXISTS integration_id TEXT,
@@ -27,6 +31,19 @@ ALTER TABLE cosmos_webhook_inbox
   ADD CONSTRAINT cosmos_webhook_inbox_status_check
   CHECK (status IN ('received', 'processing', 'processed', 'failed', 'quarantined', 'dead_letter'));
 
+CREATE TABLE IF NOT EXISTS cosmos_webhook_authorization_audit (
+  audit_id BIGSERIAL PRIMARY KEY,
+  event_id TEXT NOT NULL,
+  integration_id TEXT NOT NULL,
+  tenant_id TEXT NOT NULL,
+  event_type TEXT NOT NULL,
+  decision TEXT NOT NULL CHECK (decision IN ('allow', 'deny')),
+  reason_code TEXT NOT NULL,
+  policy_version TEXT NOT NULL DEFAULT 'webhook-policy-v1',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (integration_id, event_id, decision)
+);
+
 CREATE INDEX IF NOT EXISTS cosmos_webhook_inbox_tenant_received_idx
   ON cosmos_webhook_inbox (tenant_id, status, received_at);
 
@@ -34,6 +51,9 @@ CREATE INDEX IF NOT EXISTS cosmos_webhook_inbox_queue_ready_idx
   ON cosmos_webhook_inbox (status, available_at, received_at)
   WHERE status IN ('received', 'failed', 'processing');
 
+CREATE INDEX IF NOT EXISTS cosmos_webhook_audit_tenant_created_idx
+  ON cosmos_webhook_authorization_audit (tenant_id, created_at);
+
 -- No integration is enabled by this migration. Secrets remain in server-side env.
--- The inbox is not executed by this schema; WARP GATE and a worker adapter remain
--- separate required runtime components.
+-- The audit table is insert-only by application convention; enforce DB-level
+-- immutability with restricted database roles before production use.
