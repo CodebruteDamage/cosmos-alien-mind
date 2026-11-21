@@ -1,4 +1,4 @@
-import test from "node:test";import assert from "node:assert/strict";import{runRepositoryDiscovery,buildInspectionReport,FAILURE_CODES}from"../src/v1.2/discovery-core.mjs";
+import test from "node:test";import assert from "node:assert/strict";import{runRepositoryDiscovery,buildInspectionReport,FAILURE_CODES}from"../../src/v1.2/discovery-core.mjs";
 const req=(scope={include:["src"],exclude:["src/private"],mode:"READ_ONLY"})=>({contract_version:"1.0",inspection_id:"i-1",target:{type:"repository",identifier:"owner/repo"},profile:"code",scope,authorization_ref:"a1"});
 const auth=async({target,scope,profile})=>({authorized:true,target,include:scope.include,exclude:scope.exclude??[],profiles:[profile],expiresAt:"2099-01-01T00:00:00Z"});
 const adapter={listFiles:async()=>({complete:true,sourceId:"repo",sourceRevision:"abc",entries:[{path:"src/a.js",content:"ok"}]})};
