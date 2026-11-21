@@ -11,7 +11,7 @@ Responsive Next.js MVP foundation for the Cosmos AI personal assistant dashboard
 - Input validation and generic public-facing database errors.
 - No API keys or database credentials are committed.
 
-**Not implemented yet:** live AI/model inference, authentication, per-user data isolation, and production abuse controls. Do not treat this as a production-ready multi-user service until these are implemented.
+**Not implemented yet:** live AI/model inference, user authentication, per-user conversation isolation, and production abuse controls. Do not treat this as a production-ready multi-user service until these are implemented.
 
 ## Local setup
 
@@ -26,7 +26,7 @@ Responsive Next.js MVP foundation for the Cosmos AI personal assistant dashboard
 
 ## Neon schema
 
-The schema creates `conversations` and `messages` tables with UUID keys, constraints, foreign-key cascade deletion, and lookup indexes. Apply it only to the intended project/database.
+The application schema creates `conversations` and `messages` tables with UUID keys, constraints, foreign-key cascade deletion, and lookup indexes. Apply it only to the intended project/database.
 
 ## Deploy
 
@@ -34,17 +34,22 @@ Import this repository into Vercel (or connect it to the existing Cosmos deploym
 
 ## Security notes
 
-- This MVP does not yet authenticate users. Do not store sensitive/private conversations or expose the public write endpoint as a production service until authentication, authorization, rate limiting, and abuse protection are added.
+- The main MVP does not yet authenticate users. Do not store sensitive/private conversations or expose the public write endpoint as a production service until authentication, authorization, rate limiting, and abuse protection are added.
 - The health route returns only generic failure status; it does not expose credentials.
 - Real AI inference should be added as a server-side provider adapter with secret keys held only in server environment variables.
 
 ## Webhook security foundation (branch-only)
 
-A disabled-by-default inbound webhook security foundation is proposed in
-`feat/cosmos-webhook-gap-closure`. It verifies timestamped HMAC-SHA256 signatures,
-validates a strict event envelope, and persists unique events to a PostgreSQL inbox.
-The route remains disabled unless `COSMOS_WEBHOOK_ENABLED=true` is explicitly set
-in a server-side environment. The included SQL migration requires manual review
-and application. This is not a production-ready multi-tenant webhook service:
-per-integration identity, tenant isolation, WARP GATE authorization, workers,
-rate limiting, retention, and operational recovery remain future gates.
+The `feat/cosmos-webhook-gap-closure` branch contains a disabled-by-default
+webhook ingress with per-integration key-ID lookup, server-side secret references,
+tenant assignment from a trusted registry, event-to-operation policy mapping,
+HMAC verification, and WARP GATE policy-evaluator checks. Authorization decisions
+are recorded in a dedicated audit table. Inbox queue primitives provide bounded
+claims, lease recovery, retries, and dead-letter state.
+
+This remains a security foundation, not a complete production webhook service.
+The SQL migrations are not applied, no integration is enabled, and there is no
+scheduled worker or downstream execution adapter. Trusted human approval,
+secret rotation/revocation, rate limiting, database-enforced audit immutability,
+retention, and operational recovery remain open gates. No deployment or
+production endpoint activation is authorized by this branch.
