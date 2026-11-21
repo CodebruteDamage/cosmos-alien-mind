@@ -37,12 +37,21 @@ CREATE TABLE IF NOT EXISTS cosmos_webhook_authorization_audit (
   integration_id TEXT NOT NULL,
   tenant_id TEXT NOT NULL,
   event_type TEXT NOT NULL,
+  decision_stage TEXT NOT NULL CHECK (decision_stage IN ('ingress', 'dispatch')),
   decision TEXT NOT NULL CHECK (decision IN ('allow', 'deny')),
   reason_code TEXT NOT NULL,
   policy_version TEXT NOT NULL DEFAULT 'webhook-policy-v1',
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE (integration_id, event_id, decision)
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE cosmos_webhook_authorization_audit
+  ADD COLUMN IF NOT EXISTS decision_stage TEXT NOT NULL DEFAULT 'ingress';
+
+ALTER TABLE cosmos_webhook_authorization_audit
+  DROP CONSTRAINT IF EXISTS cosmos_webhook_authorization_audit_integration_id_event_id_decision_key;
+
+CREATE UNIQUE INDEX IF NOT EXISTS cosmos_webhook_audit_event_stage_idx
+  ON cosmos_webhook_authorization_audit (integration_id, event_id, decision_stage);
 
 CREATE INDEX IF NOT EXISTS cosmos_webhook_inbox_tenant_received_idx
   ON cosmos_webhook_inbox (tenant_id, status, received_at);
@@ -55,5 +64,4 @@ CREATE INDEX IF NOT EXISTS cosmos_webhook_audit_tenant_created_idx
   ON cosmos_webhook_authorization_audit (tenant_id, created_at);
 
 -- No integration is enabled by this migration. Secrets remain in server-side env.
--- The audit table is insert-only by application convention; enforce DB-level
--- immutability with restricted database roles before production use.
+-- Audit immutability still requires restricted database roles and operational review.
