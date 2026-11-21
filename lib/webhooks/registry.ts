@@ -1,4 +1,4 @@
-import type { NeonQueryFunction } from "@neondatabase/serverless";
+import type { getSql } from "@/lib/db";
 
 export interface WebhookIntegrationRecord {
   integrationId: string;
@@ -19,7 +19,7 @@ export function isValidSecretEnvVar(value: string): boolean {
  * Neither identity nor secret references are accepted from the webhook body.
  */
 export async function getWebhookIntegration(
-  sql: NeonQueryFunction<false, false>,
+  sql: ReturnType<typeof getSql>,
   keyId: string,
 ): Promise<WebhookIntegrationRecord | null> {
   const rows = await sql`
