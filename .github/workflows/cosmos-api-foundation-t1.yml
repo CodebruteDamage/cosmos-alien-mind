@@ -5,6 +5,7 @@ on:
     branches:
       - feat/cosmos-api-foundation-t1
       - feat/cosmos-api-security-t2
+      - feat/cosmos-better-auth-t3
   pull_request:
     branches:
       - main
