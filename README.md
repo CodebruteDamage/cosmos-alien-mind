@@ -8,6 +8,7 @@ Responsive Next.js MVP foundation for the Cosmos AI personal assistant dashboard
 - Server-side Neon Postgres client using `DATABASE_URL`.
 - Database health endpoint: `GET /api/health`.
 - Conversation persistence endpoints: `GET /api/conversations` and `POST /api/conversations`.
+- T2 tenant/owner-scoped conversation access; routes fail closed until a trusted identity provider is configured.
 - Input validation and generic public-facing database errors.
 - No API keys or database credentials are committed.
 
@@ -34,6 +35,8 @@ Import this repository into Vercel (or connect it to the existing Cosmos deploym
 
 ## Security notes
 
-- This MVP does not yet authenticate users. Do not store sensitive/private conversations or expose the public write endpoint as a production service until authentication, authorization, rate limiting, and abuse protection are added.
+- The T2 conversation routes require a trusted identity provider. No provider is configured, so conversation GET/POST currently return 503 by design.
+- Existing Neon databases require review and application of `db/migrations/20261121_001_conversation_tenant_isolation.sql` before tenant-scoped persistence can work. Legacy rows with unknown ownership remain inaccessible.
+- WARP GATE authorization, provider-specific session protections, rate limiting, audit events, and abuse controls remain outstanding.
 - The health route returns only generic failure status; it does not expose credentials.
 - Real AI inference should be added as a server-side provider adapter with secret keys held only in server environment variables.
