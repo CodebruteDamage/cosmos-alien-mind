@@ -1,9 +1,10 @@
-name: COSMOS API Foundation T1
+name: COSMOS API Foundation and Security
 
 on:
   push:
     branches:
       - feat/cosmos-api-foundation-t1
+      - feat/cosmos-api-security-t2
   pull_request:
     branches:
       - main
