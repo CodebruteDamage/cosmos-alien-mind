@@ -1,0 +1,200 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cosmos.invalid/contracts/inspector-report-v1.schema.json",
+  "title": "COSMOS INSPECTOR Report v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "inspection_id",
+    "target",
+    "profile",
+    "started_at",
+    "completed_at",
+    "overall_status",
+    "findings"
+  ],
+  "properties": {
+    "contract_version": {
+      "const": "1.0"
+    },
+    "inspection_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "identifier"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "repository",
+            "application",
+            "engine",
+            "workflow",
+            "host",
+            "integration",
+            "configuration"
+          ]
+        },
+        "identifier": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        }
+      }
+    },
+    "profile": {
+      "type": "string",
+      "enum": [
+        "architecture",
+        "code",
+        "configuration",
+        "integration",
+        "defensive_security",
+        "performance",
+        "governance",
+        "readiness",
+        "comprehensive"
+      ]
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "overall_status": {
+      "type": "string",
+      "enum": [
+        "PASS",
+        "PASS_WITH_FINDINGS",
+        "BLOCKED",
+        "FAILED",
+        "INCOMPLETE"
+      ]
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/finding"
+      }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "inspector_version": {
+      "type": "string"
+    }
+  },
+  "$defs": {
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "finding_id",
+        "title",
+        "severity",
+        "confidence",
+        "status",
+        "observed",
+        "expected",
+        "recommendation",
+        "validation_criteria"
+      ],
+      "properties": {
+        "finding_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 240
+        },
+        "severity": {
+          "type": "string",
+          "enum": [
+            "CRITICAL",
+            "HIGH",
+            "MEDIUM",
+            "LOW",
+            "INFO"
+          ]
+        },
+        "confidence": {
+          "type": "string",
+          "enum": [
+            "HIGH",
+            "MEDIUM",
+            "LOW",
+            "UNVERIFIED"
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "OPEN",
+            "TRIAGED",
+            "IN_REMEDIATION",
+            "READY_FOR_RECHECK",
+            "VERIFIED",
+            "ACCEPTED_RISK",
+            "NOT_REPRODUCIBLE",
+            "CLOSED_DUPLICATE"
+          ]
+        },
+        "observed": {
+          "type": "string"
+        },
+        "expected": {
+          "type": "string"
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "recommendation": {
+          "type": "string"
+        },
+        "validation_criteria": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "owner": {
+          "type": "string"
+        },
+        "related_finding_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
