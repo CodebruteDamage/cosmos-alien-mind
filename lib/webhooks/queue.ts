@@ -36,6 +36,17 @@ export async function claimWebhookBatch(
     throw new Error("invalid maximum attempts");
   }
 
+  // Expired leases at the attempt ceiling must not remain stuck in processing.
+  await sql`
+    UPDATE cosmos_webhook_inbox
+    SET status = 'dead_letter',
+        lease_until = NULL,
+        last_error_code = 'lease_expired_max_attempts'
+    WHERE status = 'processing'
+      AND lease_until < NOW()
+      AND attempts >= ${maxAttempts}
+  `;
+
   const rows = await sql`
     WITH candidates AS (
       SELECT event_id
@@ -46,8 +57,8 @@ export async function claimWebhookBatch(
           OR (status = 'processing' AND lease_until < NOW())
         )
       ORDER BY received_at ASC
-      FOR UPDATE SKIP LOCKED
       LIMIT ${limit}
+      FOR UPDATE SKIP LOCKED
     )
     UPDATE cosmos_webhook_inbox AS inbox
     SET status = 'processing',
