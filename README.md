@@ -38,18 +38,20 @@ Import this repository into Vercel (or connect it to the existing Cosmos deploym
 - The health route returns only generic failure status; it does not expose credentials.
 - Real AI inference should be added as a server-side provider adapter with secret keys held only in server environment variables.
 
-## Webhook security foundation (branch-only)
+## Webhook security and worker foundation (branch-only)
 
 The `feat/cosmos-webhook-gap-closure` branch contains a disabled-by-default
-webhook ingress with per-integration key-ID lookup, server-side secret references,
-tenant assignment from a trusted registry, event-to-operation policy mapping,
-HMAC verification, and WARP GATE policy-evaluator checks. Authorization decisions
-are recorded in a dedicated audit table. Inbox queue primitives provide bounded
-claims, lease recovery, retries, and dead-letter state.
+webhook ingress with per-integration identity, tenant-bound event policy, HMAC
+verification, and ingress-time WARP GATE evaluation. The callable DB-backed
+worker runtime re-resolves current policy, repeats authorization immediately
+before dispatch, checks for an explicitly registered operation handler, writes
+dispatch-stage audit records, and uses the event ID as an idempotency key.
+Queue primitives provide bounded claims, lease recovery, retries, and
+dead-letter transitions.
 
-This remains a security foundation, not a complete production webhook service.
-The SQL migrations are not applied, no integration is enabled, and there is no
-scheduled worker or downstream execution adapter. Trusted human approval,
-secret rotation/revocation, rate limiting, database-enforced audit immutability,
-retention, and operational recovery remain open gates. No deployment or
-production endpoint activation is authorized by this branch.
+This is not a scheduled or deployed worker. No production handler registry or
+trusted human-approval service is configured. SQL migrations remain unapplied,
+no integration is enabled, and database-enforced audit immutability, secret
+rotation/revocation, rate limiting, retention, replay controls, and operational
+monitoring remain open gates. No deployment or production endpoint activation
+is authorized by this branch.
