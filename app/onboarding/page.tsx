@@ -24,14 +24,14 @@ export default function OnboardingPage() {
     void authClient.organization.list().then(async ({ data, error }) => {
       if (cancelled) return;
       if (error) {
-        setNotice(error.message);
+        setNotice(error.message ?? "Could not load organizations.");
         setChecking(false);
         return;
       }
       if (data && data.length > 0) {
         const active = await authClient.organization.setActive({ organizationId: data[0].id });
         if (active.error) {
-          setNotice(active.error.message);
+          setNotice(active.error.message ?? "Could not activate the workspace.");
           setChecking(false);
           return;
         }
