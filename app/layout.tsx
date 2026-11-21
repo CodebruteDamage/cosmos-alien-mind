@@ -2,12 +2,12 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Cosmos Alien Mind",
-  description: "Cosmos AI personal assistant and control dashboard.",
+  title: "COSMOS OmniBoard",
+  description: "Unified intelligence, operations, and governance visibility for the COSMOS ecosystem.",
 };
 
 export const viewport: Viewport = {
-  themeColor: "#070914",
+  themeColor: "#080d12",
   width: "device-width",
   initialScale: 1,
 };
