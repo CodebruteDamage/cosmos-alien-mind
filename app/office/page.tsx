@@ -2,90 +2,60 @@
 
 import { useMemo, useState } from "react";
 import styles from "./office.module.css";
+import { DEMO_WORKERS } from "./workspace-contracts";
 
-type Module = {
-  id: string;
-  name: string;
-  category: "Workforce" | "Create" | "Operate" | "Engineering";
-  symbol: string;
-  summary: string;
-  description: string;
-  capabilities: string[];
-  dependencies: string[];
-};
-
-const modules: Module[] = [
-  { id: "workforce", name: "Workforce", category: "Workforce", symbol: "◉", summary: "Coordinate specialist agents and human operators.", description: "The workforce registry is the directory for people, agents, roles, and assigned missions. Registration does not grant execution authority.", capabilities: ["Agent and human registry", "Role and responsibility mapping", "Mission assignment workspace", "Performance and evidence review"], dependencies: ["Agent Registry", "Identity service", "WARP GATE"] },
-  { id: "docs", name: "Docs", category: "Create", symbol: "▤", summary: "Create and maintain operational documents.", description: "A document workspace for briefs, specifications, reports, runbooks, and controlled records.", capabilities: ["Document workspace", "Version and review metadata", "Templates and structured briefs", "Approval-ready handoff"], dependencies: ["File service", "Identity service", "Audit trail"] },
-  { id: "slides", name: "Slides", category: "Create", symbol: "▥", summary: "Build presentations from approved content.", description: "A presentation workspace for business proposals, product demos, internal briefings, and status reviews.", capabilities: ["Presentation projects", "Reusable layouts", "Evidence-linked claims", "Export integration (planned)"], dependencies: ["File service", "Docs", "Export adapter"] },
-  { id: "design", name: "Design", category: "Create", symbol: "✳", summary: "Manage visual concepts and design assets.", description: "A visual workspace for product concepts, brand assets, interface references, and design reviews.", capabilities: ["Design briefs", "Asset library", "Reference and review records", "Design handoff"], dependencies: ["File service", "Asset storage", "Review workflow"] },
-  { id: "sheets", name: "Sheets", category: "Operate", symbol: "▦", summary: "Organize structured data and calculations.", description: "A spreadsheet workspace for operational trackers, budgets, inventories, and structured analysis.", capabilities: ["Tabular datasets", "Formula engine (planned)", "Import and export adapters", "Change history"], dependencies: ["Data service", "File service", "Calculation adapter"] },
-  { id: "boards", name: "Boards", category: "Operate", symbol: "▥", summary: "Plan projects, missions, and team work.", description: "A planning surface for tasks, owners, milestones, dependencies, and delivery status.", capabilities: ["Projects and work items", "Owners and due dates", "Status and dependency tracking", "Workforce assignment"], dependencies: ["Workforce", "Identity service", "Event service"] },
-  { id: "data", name: "Data", category: "Operate", symbol: "◫", summary: "Explore metrics and operational evidence.", description: "A reporting workspace for verified operational metrics, source-linked analysis, and business dashboards.", capabilities: ["Metric catalog", "Source-linked reports", "Dashboard layouts", "Data quality indicators"], dependencies: ["Data connectors", "Evidence service", "Analytics adapter"] },
-  { id: "motion", name: "Motion", category: "Create", symbol: "▶", summary: "Prepare animated explainers and media briefs.", description: "A media workspace for storyboards, explainers, motion briefs, and approved media outputs.", capabilities: ["Storyboard planning", "Scene and asset organization", "Render job tracking", "Media review"], dependencies: ["Asset storage", "Render provider", "Review workflow"] },
-  { id: "code", name: "Code", category: "Engineering", symbol: "</>", summary: "Manage software projects and build workflows.", description: "An engineering workspace for repositories, change proposals, build evidence, and release readiness.", capabilities: ["Repository inventory", "Change and review workflow", "Build and test evidence", "Release checklist"], dependencies: ["Git provider", "Build runners", "WARP GATE"] },
-  { id: "browser", name: "Browser", category: "Engineering", symbol: "◎", summary: "Coordinate authorized browser-based work.", description: "A browser workspace for approved research and web workflows. External actions require explicit scope and authorization.", capabilities: ["Research sessions", "Approved site scopes", "Task and evidence history", "Human confirmation checkpoints"], dependencies: ["Browser provider", "Scope policy", "WARP GATE"] },
+type View = "overview" | "workforce" | "maxx" | "docs" | "slides" | "design" | "sheets" | "boards" | "data" | "motion" | "code" | "browser";
+const modules: {id: View; name: string; category: string; symbol: string; summary: string}[] = [
+ {id:"workforce",name:"Workforce Live",category:"Workforce",symbol:"◉",summary:"Employee registry, missions and lifecycle activity"},
+ {id:"maxx",name:"MAXX Analyzer",category:"Intelligence",symbol:"⌘",summary:"Multi-analyzer boards, evidence and confidence"},
+ {id:"docs",name:"Docs",category:"Create",symbol:"▤",summary:"Documents, specifications and reports"},
+ {id:"slides",name:"Slides",category:"Create",symbol:"▥",summary:"Presentations and briefings"},
+ {id:"design",name:"Design",category:"Create",symbol:"✳",summary:"Visual concepts and assets"},
+ {id:"sheets",name:"Sheets",category:"Operate",symbol:"▦",summary:"Structured data and calculations"},
+ {id:"boards",name:"Boards",category:"Operate",symbol:"▥",summary:"Projects, missions and delivery tracking"},
+ {id:"data",name:"Data",category:"Operate",symbol:"◫",summary:"Metrics and evidence-linked analytics"},
+ {id:"motion",name:"Motion",category:"Create",symbol:"▶",summary:"Storyboards and media workflows"},
+ {id:"code",name:"Code",category:"Engineering",symbol:"</>",summary:"Repositories, changes and build evidence"},
+ {id:"browser",name:"Browser",category:"Engineering",symbol:"◎",summary:"Authorized research and web workflows"},
 ];
-
-const categories = ["All", "Workforce", "Create", "Operate", "Engineering"] as const;
-type Category = (typeof categories)[number];
-
-export default function CosmosOfficePage() {
-  const [active, setActive] = useState("overview");
-  const [category, setCategory] = useState<Category>("All");
-  const [query, setQuery] = useState("");
-  const selected = modules.find((item) => item.id === active);
-  const filtered = useMemo(() => modules.filter((item) => (category === "All" || item.category === category) && (item.name + " " + item.summary).toLowerCase().includes(query.toLowerCase())), [category, query]);
-
-  return (
-    <main className={styles.shell}>
-      <aside className={styles.sidebar}>
-        <a className={styles.brand} href="/"><span className={styles.brandMark}>✦</span><span><strong>COSMOS</strong><small>OFFICE</small></span></a>
-        <div className={styles.workspaceLabel}>WORKSPACE</div>
-        <button className={active === "overview" ? styles.navActive : styles.navItem} onClick={() => setActive("overview")}><span>⌂</span> Office overview</button>
-        <button className={active === "workforce" ? styles.navActive : styles.navItem} onClick={() => setActive("workforce")}><span>◉</span> Workforce</button>
-        <div className={styles.workspaceLabel}>APPLICATIONS</div>
-        {modules.filter((item) => item.id !== "workforce").map((item) => <button key={item.id} className={active === item.id ? styles.navActive : styles.navItem} onClick={() => setActive(item.id)}><span>{item.symbol}</span>{item.name}</button>)}
-        <div className={styles.sidebarFoot}><span className={styles.statusDot} /> Foundation preview <small>UI only · integrations pending</small></div>
-      </aside>
-
-      <section className={styles.main}>
-        <header className={styles.topbar}>
-          <div className={styles.crumb}>COSMOS <span>/</span> OFFICE <span>/</span> {selected?.name.toUpperCase() ?? "OVERVIEW"}</div>
-          <div className={styles.topActions}><span className={styles.previewTag}>FOUNDATION PREVIEW</span><span className={styles.avatar}>F</span></div>
-        </header>
-
-        {selected ? (
-          <div className={styles.content}>
-            <button className={styles.backLink} onClick={() => setActive("overview")}>← Office overview</button>
-            <div className={styles.moduleHero}>
-              <div className={styles.moduleSymbol}>{selected.symbol}</div>
-              <div><div className={styles.eyebrow}>{selected.category.toUpperCase()} APPLICATION</div><h1>COSMOS {selected.name.toUpperCase()}</h1><p>{selected.description}</p></div>
-            </div>
-            <div className={styles.statusStrip}><span className={styles.statusDot} /> Interface foundation present <span className={styles.statusDivider}>·</span> Service integration not connected</div>
-            <div className={styles.detailGrid}>
-              <section className={styles.panel}><div className={styles.panelTitle}>CAPABILITY AREAS</div><div className={styles.capabilityList}>{selected.capabilities.map((cap) => <div key={cap}><span>◇</span>{cap}</div>)}</div></section>
-              <section className={styles.panel}><div className={styles.panelTitle}>REQUIRED SERVICES</div><div className={styles.capabilityList}>{selected.dependencies.map((dep) => <div key={dep}><span>⌁</span>{dep}<small>Pending integration</small></div>)}</div></section>
-            </div>
-            <section className={styles.gatePanel}><div><div className={styles.panelTitle}>WARP GATE · ACCESS POLICY</div><strong>Execution is not enabled from this interface.</strong><p>Module availability is separate from agent clearance. A future action must declare its capability, scope, risk, evidence requirements, and approval path before execution.</p></div><span className={styles.lock}>▣ LOCKED</span></section>
-          </div>
-        ) : (
-          <div className={styles.content}>
-            <div className={styles.heroRow}><div><div className={styles.eyebrow}>UNIFIED WORK ENVIRONMENT</div><h1>One office.<br/><em>Modular intelligence.</em></h1><p className={styles.intro}>A shared workspace for people, AI workforce, and specialized applications — governed by one permission and evidence layer.</p></div><div className={styles.orbit}><div className={styles.orbitRing} /><div className={styles.orbitCore}>C</div><span className={styles.orbitDot} /></div></div>
-            <div className={styles.metrics}>
-              <div><span>APPLICATION MODULES</span><strong>10</strong><small>Registered in foundation catalog</small></div>
-              <div><span>CONNECTED SERVICES</span><strong>0</strong><small>Integration status not yet verified</small></div>
-              <div><span>EXECUTION AUTHORITY</span><strong>LOCKED</strong><small>Requires WARP GATE policy</small></div>
-            </div>
-            <div className={styles.sectionHead}><div><div className={styles.eyebrow}>APPLICATION DIRECTORY</div><h2>Office applications</h2></div><input aria-label="Search applications" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search modules…" /></div>
-            <div className={styles.filters}>{categories.map((item) => <button key={item} onClick={() => setCategory(item)} className={category === item ? styles.filterActive : styles.filter}>{item}</button>)}</div>
-            <div className={styles.moduleGrid}>{filtered.map((item) => <article className={styles.moduleCard} key={item.id}><div className={styles.cardTop}><span className={styles.cardSymbol}>{item.symbol}</span><span className={styles.cardStatus}>FOUNDATION</span></div><h3>COSMOS {item.name.toUpperCase()}</h3><p>{item.summary}</p><button onClick={() => setActive(item.id)}>Open workspace <span>↗</span></button></article>)}</div>
-            {filtered.length === 0 && <div className={styles.empty}>No modules match this search.</div>}
-            <section className={styles.governance}><div className={styles.governanceIcon}>▣</div><div><div className={styles.eyebrow}>SHARED GOVERNANCE LAYER</div><h2>WARP GATE controls execution.</h2><p>Identity · Capability grants · Scope validation · Human approval · Evidence · Audit trail</p></div><span className={styles.lock}>EXECUTION LOCKED</span></section>
-            <footer className={styles.footer}><span>COSMOS OFFICE · FOUNDATION V1.0</span><span>OBSERVE · VERIFY · AUTHORIZE</span></footer>
-          </div>
-        )}
-      </section>
-    </main>
-  );
+const demoFindings = [
+ {label:"Evidence coverage",value:72,detail:"Illustrative fixture only"},
+ {label:"Source freshness",value:84,detail:"Illustrative fixture only"},
+ {label:"Confidence rationale",value:61,detail:"Illustrative fixture only"},
+];
+export default function CosmosOfficePage(){
+ const [active,setActive]=useState<View>("overview");
+ const [query,setQuery]=useState("");
+ const [reducedMotion,setReducedMotion]=useState(false);
+ const filtered=useMemo(()=>modules.filter(m=>(m.name+" "+m.summary).toLowerCase().includes(query.toLowerCase())),[query]);
+ const select=(id:View)=>setActive(id);
+ return <main className={styles.shell}>
+  <aside className={styles.sidebar}>
+   <a className={styles.brand} href="/"><span className={styles.brandMark}>✦</span><span><strong>COSMOS</strong><small>OFFICE</small></span></a>
+   <div className={styles.workspaceLabel}>WORKSPACE</div>
+   <button className={active==="overview"?styles.navActive:styles.navItem} onClick={()=>select("overview")}><span>⌂</span> Command overview</button>
+   <button className={active==="workforce"?styles.navActive:styles.navItem} onClick={()=>select("workforce")}><span>◉</span> Workforce Live <i className={styles.demoDot}/></button>
+   <button className={active==="maxx"?styles.navActive:styles.navItem} onClick={()=>select("maxx")}><span>⌘</span> MAXX Analyzer</button>
+   <div className={styles.workspaceLabel}>APPLICATIONS</div>
+   {modules.filter(m=>!["workforce","maxx"].includes(m.id)).map(m=><button key={m.id} className={active===m.id?styles.navActive:styles.navItem} onClick={()=>select(m.id)}><span>{m.symbol}</span>{m.name}</button>)}
+   <div className={styles.sidebarFoot}><span className={styles.statusDot}/><span>Development preview</span><small>Demo fixtures · integrations pending</small></div>
+  </aside>
+  <section className={styles.main}>
+   <header className={styles.topbar}><div className={styles.crumb}>COSMOS <span>/</span> OFFICE <span>/</span> {active.toUpperCase()}</div><div className={styles.topActions}><span className={styles.previewTag}>DEV PREVIEW · NOT LIVE</span><span className={styles.avatar}>F</span></div></header>
+   <div className={styles.content}>
+    {active==="overview" && <>
+     <div className={styles.heroRow}><div><div className={styles.eyebrow}>UNIFIED OPERATING ENVIRONMENT</div><h1>One office.<br/><em>Many capabilities.</em></h1><p className={styles.intro}>A modular workspace for human operators, AI workforce and specialist applications. Shared identity, evidence and authorization boundaries are designed into the platform.</p></div><div className={styles.orbit}><div className={styles.orbitRing}/><div className={styles.orbitCore}>C</div><span className={styles.orbitDot}/></div></div>
+     <div className={styles.metrics}><div><span>APPLICATIONS</span><strong>11</strong><small>Catalogued workspaces</small></div><div><span>LIVE WORKERS</span><strong>—</strong><small>No live registry connection</small></div><div><span>EXECUTION</span><strong>LOCKED</strong><small>WARP GATE integration pending</small></div></div>
+     <div className={styles.sectionHead}><div><div className={styles.eyebrow}>WORKSPACE DIRECTORY</div><h2>Integrated workspaces</h2></div><input aria-label="Search modules" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search applications…"/></div>
+     <div className={styles.moduleGrid}>{filtered.map(m=><article className={styles.moduleCard} key={m.id}><div className={styles.cardTop}><span className={styles.cardSymbol}>{m.symbol}</span><span className={styles.cardStatus}>{m.id==="maxx"||m.id==="workforce"?"PROTOTYPE":"FOUNDATION"}</span></div><h3>COSMOS {m.name.toUpperCase()}</h3><p>{m.summary}</p><button onClick={()=>select(m.id)}>Open workspace <span>↗</span></button></article>)}</div>
+     {filtered.length===0&&<div className={styles.empty}>No matching workspace.</div>}
+     <section className={styles.governance}><div className={styles.governanceIcon}>▣</div><div><div className={styles.eyebrow}>SHARED GOVERNANCE</div><h2>WARP GATE controls execution.</h2><p>Identity · Capability grants · Scope validation · Human approval · Evidence · Audit trail</p></div><span className={styles.lock}>EXECUTION LOCKED</span></section>
+    </>}
+    {active==="workforce" && <><button className={styles.backLink} onClick={()=>select("overview")}>← Overview</button><div className={styles.eyebrow}>WORKFORCE OPERATIONS</div><h1 className={styles.pageTitle}>Workforce <em>Live</em></h1><p className={styles.intro}>Registry and event-driven workforce view. The workers below are demo fixtures, not connected employees or active agents.</p><div className={styles.noticeBar}>DEMO DATA ONLY · No live event stream connected · Last event: unavailable</div><div className={styles.workerGrid}>{DEMO_WORKERS.map((w,i)=><article className={styles.workerCard} key={w.workerId}><div className={styles.workerHead}><div className={styles.workerAvatar}>{w.displayName.slice(0,1)}</div><span className={styles.demoPill}>DEMO</span></div><h3>{w.displayName}</h3><p>{w.role}</p><div className={styles.workerState}><span className={styles.neutralDot}/> Registered fixture · status not connected</div><small>{w.capabilityIds.join(" · ")}</small></article>)}</div><div className={styles.panel}><div className={styles.panelTitle}>EVENT STREAM</div><p className={styles.mutedText}>Waiting for authenticated workforce events. Animations are disabled until authoritative lifecycle events are available.</p><button className={styles.secondaryButton} onClick={()=>setReducedMotion(!reducedMotion)}>{reducedMotion?"Enable ambient motion":"Reduce motion"}</button><p className={styles.mutedText}>Preference: {reducedMotion?"Reduced motion":"Standard motion"} · Visual preference only</p></div></>}
+    {active==="maxx" && <><button className={styles.backLink} onClick={()=>select("overview")}>← Overview</button><div className={styles.eyebrow}>MULTI-ANALYZER INTELLIGENCE</div><h1 className={styles.pageTitle}>COSMOS <em>MAXX</em></h1><p className={styles.intro}>Evidence-led analysis workspaces. All values below are illustrative fixtures to demonstrate the board layout, not measured system results.</p><div className={styles.noticeBar}>ILLUSTRATIVE BOARD · No production analyzers connected · Scores are not operational measurements</div><div className={styles.maxxGrid}>{demoFindings.map(f=><article className={styles.maxxCard} key={f.label}><div className={styles.panelTitle}>{f.label.toUpperCase()}</div><div className={styles.score}>{f.value}<small>/100</small></div><div className={styles.meter}><span style={{width:f.value+"%"}}/></div><p>{f.detail}</p></article>)}</div><div className={styles.detailGrid}><section className={styles.panel}><div className={styles.panelTitle}>ANALYZER REGISTRY</div>{["Evidence Analyzer","Confidence Analyzer","Benchmark Analyzer","Optimization Analyzer"].map(x=><div className={styles.capabilityRow} key={x}><span>◇</span>{x}<small>Not connected</small></div>)}</section><section className={styles.panel}><div className={styles.panelTitle}>BOARD PRINCIPLES</div><div className={styles.capabilityRow}>Separate observations, inferences and recommendations</div><div className={styles.capabilityRow}>Show source provenance and freshness</div><div className={styles.capabilityRow}>Never invent scores when evidence is missing</div><div className={styles.capabilityRow}>Recommendations cannot authorize execution</div></section></div></>}
+    {!["overview","workforce","maxx"].includes(active)&&<><button className={styles.backLink} onClick={()=>select("overview")}>← Overview</button><div className={styles.eyebrow}>APPLICATION WORKSPACE</div><h1 className={styles.pageTitle}>COSMOS <em>{modules.find(m=>m.id===active)?.name.toUpperCase()}</em></h1><p className={styles.intro}>{modules.find(m=>m.id===active)?.summary}. This workspace is catalogued but its service integration is not connected.</p><div className={styles.noticeBar}>FOUNDATION INTERFACE · SERVICE NOT CONNECTED</div><section className={styles.gatePanel}><div><div className={styles.panelTitle}>WARP GATE · ACCESS POLICY</div><strong>Execution is not enabled from this interface.</strong><p>Module visibility does not grant permission. Actions require a server-side capability decision, scope validation, audit record, and applicable human approval.</p></div><span className={styles.lock}>LOCKED</span></section></>}
+    <footer className={styles.footer}><span>COSMOS OFFICE · MAXX + WORKFORCE PROTOTYPE</span><span>OBSERVE · VERIFY · AUTHORIZE</span></footer>
+   </div>
+  </section>
+ </main>;
 }
