@@ -1,6 +1,6 @@
 # COSMOS Visual Engine — Adoption Plan v1.0
 
-Status: DESIGN / SOURCE REVIEW REQUIRED
+Status: DESIGN / LICENSE REVIEW PASSED; IMPLEMENTATION PENDING
 Target repository: CodebruteDamage/cosmos-alien-mind
 Base branch: main
 Working branch: visual-engine/adoption-v1
@@ -21,7 +21,7 @@ The reference skill is:
 - Current dependencies include Next.js, React, Neon serverless, and Zod.
 - Three.js is not currently listed as a dependency.
 - The README describes this as an MVP and explicitly notes that authentication, per-user isolation, live inference, and production abuse controls are not implemented.
-- No LICENSE file was found at the repository root during this review. The reference repository's applicable license has not yet been verified.
+- The target repository has no root LICENSE file. The reference repository `MengTo/Skills` has a root MIT License (Copyright (c) 2026 Meng To), verified during this review. Any copied or adapted portions must retain the copyright and permission notice.
 
 ## Adoption boundary
 
@@ -72,7 +72,7 @@ This is a proposed layout, not a claim that these files already exist.
 
 ## Validation gates
 
-- [ ] Verify the reference repository's license and attribution requirements.
+- [x] Verify the reference repository's root MIT License and attribution requirements.
 - [ ] Review the exact Three.js version and dependency/security implications before adding it.
 - [ ] Confirm compatibility with the existing Next.js client-component boundary.
 - [ ] Unit-test area-weighted sampling and barycentric placement.
@@ -90,7 +90,7 @@ This is a proposed layout, not a claim that these files already exist.
 - [x] Existing README, package manifest, dashboard entry point, layout, Next.js config, database schema, and ignore rules inspected.
 - [x] Isolated working branch created from main.
 - [x] Adoption boundary and validation plan documented.
-- [ ] Reference license review complete.
+- [x] Reference root MIT license reviewed; attribution obligation recorded.
 - [ ] Implementation complete.
 - [ ] Tests and build passed.
 - [ ] Dashboard integration complete.
