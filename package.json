@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "test:inspector": "node --test engines/inspector/test/v1.2/*.test.mjs"
+    "test:inspector": "node --test engines/inspector/test/v1.2/*.test.mjs",
+    "test:inspector:all": "node --test engines/inspector/test/**/*.test.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
