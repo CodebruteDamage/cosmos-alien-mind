@@ -29,3 +29,11 @@ test("runtime adapter is read-only and never starts execution", () => {
   assert.equal(snapshot.executionStarted, false);
   assert.equal(snapshot.adapter, "COSMAXX Runtime Adapter");
 });
+
+test("runtime adapter preserves registry evidence requirements for every domain", () => {
+  const snapshot = getCosmaxxRuntimeSnapshot();
+  for (const { definition } of snapshot.domains) {
+    assert.ok(definition.evaluationAreas.length > 0);
+    assert.ok(definition.requiredEvidence.length > 0);
+  }
+});
