@@ -3,7 +3,7 @@ import {
   createUnassessedDomainSnapshot,
   type CosmaxxDomainAssessment,
   type CosmaxxDomainDefinition,
-} from "./seven-domain-registry";
+} from "./seven-domain-registry.ts";
 
 export type CosmaxxRuntimeDomain = {
   definition: CosmaxxDomainDefinition;
