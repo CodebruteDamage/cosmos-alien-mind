@@ -32,10 +32,12 @@ jobs:
           from jsonschema import Draft202012Validator
           schema = json.loads(Path("schemas/skill-manifest.v1.schema.json").read_text())
           Draft202012Validator.check_schema(schema)
+          certification_schema = json.loads(Path("schemas/skill-certification.v1.schema.json").read_text())
+          Draft202012Validator.check_schema(certification_schema)
           registry = json.loads(Path("registry/skills/registry.seed.v1.json").read_text())
           assert registry["execution_enabled"] is False
           assert registry["policy_enforcement"] == "WARP_GATE_REQUIRED"
-          print("Schema structure valid; registry remains non-executable.")
+          print("Manifest and certification schemas valid; registry remains non-executable.")
           PY
       - name: Run registry policy tests
         run: python -m unittest discover -s tests/skill_registry -v
