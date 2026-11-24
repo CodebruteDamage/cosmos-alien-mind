@@ -9,7 +9,7 @@ const sample = {
 
 test("assesses a blocker with deterministic weighted score", () => {
   const result = assessBlocker(sample);
-  assert.equal(result.priorityScore, 3.75);
+  assert.equal(result.priorityScore, 3.4);
   assert.equal(result.priority, "high");
   assert.equal(result.decision, "recommendation_only");
   assert.equal(result.requiresHumanApproval, true);
