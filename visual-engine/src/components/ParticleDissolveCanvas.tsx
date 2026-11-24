@@ -35,7 +35,6 @@ function createProgram(gl:WebGLRenderingContext,vertex:string,fragment:string):P
   return {program,position,normal,seed:gl.getAttribLocation(program,"a_seed"),brush:gl.getUniformLocation(program,"u_brush"),exposure:gl.getUniformLocation(program,"u_exposure"),time:gl.getUniformLocation(program,"u_time"),scale:gl.getUniformLocation(program,"u_scale"),pixelRatio:gl.getUniformLocation(program,"u_pixel_ratio")};
 }
 function faceNormals(geometry:SurfaceGeometry):Float32Array {
-  if(geometry.normals)return Float32Array.from(geometry.normals);
   const result=new Float32Array(geometry.positions.length),corners=geometry.indices?.length??geometry.positions.length/3;
   for(let i=0;i+2<corners;i+=3){
     const ids=[geometry.indices?Number(geometry.indices[i]):i,geometry.indices?Number(geometry.indices[i+1]):i+1,geometry.indices?Number(geometry.indices[i+2]):i+2];
@@ -44,6 +43,12 @@ function faceNormals(geometry:SurfaceGeometry):Float32Array {
     let nx=ab[1]*ac[2]-ab[2]*ac[1],ny=ab[2]*ac[0]-ab[0]*ac[2],nz=ab[0]*ac[1]-ab[1]*ac[0],len=Math.hypot(nx,ny,nz)||1;
     nx/=len;ny/=len;nz/=len;
     for(const id of ids){result[id*3]=nx;result[id*3+1]=ny;result[id*3+2]=nz;}
+  }
+  if(geometry.normals){
+    for(let vertex=0;vertex<geometry.positions.length/3;vertex++){
+      const offset=vertex*3,nx=Number(geometry.normals[offset]),ny=Number(geometry.normals[offset+1]),nz=Number(geometry.normals[offset+2]),length=Math.hypot(nx,ny,nz);
+      if(Number.isFinite(length)&&length>1e-8){result[offset]=nx/length;result[offset+1]=ny/length;result[offset+2]=nz/length;}
+    }
   }
   return result;
 }
@@ -170,6 +175,9 @@ export function ParticleDissolveCanvas({geometry,particleCount=4000,className,la
         if(gl){for(const buffer of buffers)gl.deleteBuffer(buffer);if(solid)gl.deleteProgram(solid.program);if(particles)gl.deleteProgram(particles.program);}
       };
     }catch(cause){
+      if(raf)cancelAnimationFrame(raf);
+      observer?.disconnect();
+      if(gl){for(const buffer of buffers)gl.deleteBuffer(buffer);if(solid)gl.deleteProgram(solid.program);if(particles)gl.deleteProgram(particles.program);}
       setFallback(true);setError(cause instanceof Error?cause.message:"Unable to initialize the visual engine");
     }
   },[geometry,particleCount,enabled]);
