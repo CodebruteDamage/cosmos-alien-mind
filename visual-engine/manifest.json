@@ -1,7 +1,7 @@
 {
   "name": "cosmos-particle-dissolve",
   "version": "1.0.0",
-  "status": "foundation",
+  "status": "isolated-prototype",
   "category": "presentation-only",
   "runtime_dependencies": [],
   "permissions": [],
@@ -16,6 +16,19 @@
     "default_particle_budget": 4000,
     "maximum_particle_budget": 12000,
     "reduced_motion_supported": true,
-    "static_fallback_required": true
+    "static_fallback_required": true,
+    "renderer": "native-webgl1",
+    "particle_budget_range": [
+      256,
+      12000
+    ],
+    "model_coordinates": "normalized-origin-centered-orthographic-xy",
+    "advanced_mesh_features": [
+      "skinning",
+      "morph-targets",
+      "multi-mesh-transforms",
+      "textures",
+      "shadows"
+    ]
   }
 }
