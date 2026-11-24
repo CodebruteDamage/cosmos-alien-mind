@@ -1,41 +1,49 @@
 # COSMOS Particle Dissolve Engine v1.0
 
-**Milestone 1 — dependency-free core foundation.** This package is isolated from the dashboard, database, model providers, and governance services.
+**Status: isolated browser prototype source committed; runtime validation pending.**
 
-## Implemented in this milestone
+## Implemented
 
 - Deterministic, area-weighted triangle sampling with barycentric placement.
 - Interpolated/normalized normals and stable per-particle seeds.
-- CPU reference erosion field and smooth particle reveal function.
-- Frame-time-aware exponential damping.
+- CPU reference erosion field, smooth particle reveal, and frame-time-aware damping.
 - Explicit interaction state transitions for hit, miss, preview, reduced motion, and suspension.
+- WebGL1 shaders for the solid mesh and matching particle cloud.
+- Browser-only React component with intact-source-mesh pointer raycasting.
+- Static visual fallback, reduced-motion handling, keyboard-operated preview, visibility/blur handling, and WebGL context-loss fallback.
+- Resource ownership and cleanup for buffers, programs, animation frames, event listeners, and ResizeObserver.
 - Capability manifest declaring zero permissions and zero data access.
-
-## Deliberately not included yet
-
-- Three.js/WebGL renderer or React canvas component.
-- Runtime dependency changes.
-- Browser integration, automated test harness, or device benchmarks.
-- Dashboard integration, merge, or deployment.
-
-The repository currently has no committed npm, pnpm, Yarn, or Bun lockfile, and the connected local workstation was offline at implementation time. This milestone therefore avoids guessing a package manager or silently introducing an unpinned renderer dependency.
+- Dependency-free Node test suite for pure geometry, math, state, and raycast behavior.
 
 ## API
 
-Import the pure functions from their source modules:
+Import the component and stylesheet:
 
-- `sampleSurface(geometry, count, seed)`
-- `erosionField(home, brush, config)`
-- `particleReveal(field, exposure, band)`
-- `damp(current, target, rate, deltaSeconds)`
-- `transitionInteraction(state, event)`
+    import "visual-engine/src/components/particle-dissolve.css";
+    import { ParticleDissolveCanvas } from "visual-engine/src/components";
 
-Sampling skips degenerate triangles and throws if no usable triangle remains. Geometry arrays use flat XYZ triples. Sampling is deterministic for a given geometry, count, and seed.
+The component accepts indexed or non-indexed flat XYZ triangle geometry. Geometry should be normalized and origin-centered. Default particle count is 4,000, clamped between 256 and 12,000.
 
-## Next gate
+Pure functions:
+- sampleSurface(geometry, count, seed)
+- erosionField(home, brush, config)
+- particleReveal(field, exposure, band)
+- damp(current, target, rate, deltaSeconds)
+- transitionInteraction(state, event)
+- raycastSurfaceXY(geometry, x, y)
 
-1. Confirm package manager and generate/commit its lockfile in an online build environment.
-2. Select and pin the renderer version.
-3. Add a client-only WebGL component with static fallback and full teardown.
-4. Add executable unit tests and browser interaction tests.
-5. Measure mobile and desktop frame time before dashboard integration.
+## Current renderer limitations
+
+The initial renderer uses a fixed orthographic XY view and no external renderer dependency. It does not yet support model rotation, skinned meshes, morph targets, multiple mesh transforms, textures, shadow clipping, camera animation, or context restoration without remount/reload. The caller must supply a normalized mesh geometry. The CSS is imported by the consuming component/app.
+
+## Test command
+
+Node.js 22.18+ / 24+:
+
+    npm test
+
+The test command uses Node's built-in test runner and TypeScript type stripping. Browser/WebGL tests and device performance tests remain separate release gates.
+
+## Integration boundary
+
+This module does not access Neon, conversations, provider credentials, secrets, or governance controls. It is not mounted in the dashboard yet. No runtime dependency was added. No merge or deployment has occurred.
