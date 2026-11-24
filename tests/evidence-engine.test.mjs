@@ -1,0 +1,16 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {createHash} from "node:crypto";
+import {evaluateEvidence,createEvidenceStoreAdapterContract} from "../lib/evidence-engine/engine.mjs";
+const artifact="workflow run: unit tests passed";
+const digest=createHash("sha256").update(artifact).digest("hex");
+const base={evidenceId:"EV-001",source:"github-actions",sourceTier:"authoritative",subject:"build-guidance",claim:"Unit tests passed",claimKey:"unit-tests",value:"passed",collectedAt:"2026-11-24T12:00:00.000Z",artifact,digest,sourceReference:"https://github.com/example/repo/actions"};
+test("authoritative artifact with matching digest is verified",()=>{const r=evaluateEvidence({records:[base]},{now:"2026-11-24T13:00:00Z"});assert.equal(r.findings[0].status,"VERIFIED");assert.equal(r.findings[0].integrity.status,"valid");});
+test("digest mismatch is unverified and reported",()=>{const r=evaluateEvidence({records:[{...base,digest:"0".repeat(64)}]},{now:"2026-11-24T13:00:00Z"});assert.equal(r.findings[0].status,"UNVERIFIED");assert.ok(r.findings[0].issues.includes("digest-mismatch"));});
+test("non-authoritative evidence cannot be marked verified",()=>{const r=evaluateEvidence({records:[{...base,sourceTier:"first_party"}]},{now:"2026-11-24T13:00:00Z"});assert.equal(r.findings[0].status,"OBSERVED");});
+test("stale evidence is identified",()=>{const r=evaluateEvidence({records:[base]},{now:"2027-02-01T00:00:00Z",maxAgeDays:30});assert.equal(r.findings[0].status,"STALE");});
+test("conflicting values are flagged",()=>{const r=evaluateEvidence({records:[base,{...base,evidenceId:"EV-002",value:"failed"}]},{now:"2026-11-24T13:00:00Z"});assert.equal(r.conflictCount,1);assert.ok(r.findings.every(x=>x.status==="CONFLICTED"));});
+test("inferences remain explicitly inferred",()=>{const r=evaluateEvidence({records:[{...base,kind:"inference"}]},{now:"2026-11-24T13:00:00Z"});assert.equal(r.findings[0].status,"INFERRED");});
+test("invalid collection size is rejected",()=>{assert.throws(()=>evaluateEvidence({records:[]}),/between 1 and 500/);});
+test("evidence evaluation never authorizes execution",()=>{const r=evaluateEvidence({records:[base]},{now:"2026-11-24T13:00:00Z"});assert.equal(r.authorization.executionAuthorized,false);assert.equal(r.authorization.defaultDecision,"deny");});
+test("storage contract requires append-only audit controls",()=>{const c=createEvidenceStoreAdapterContract();assert.match(c.immutability,/append-only/);assert.ok(c.requiredControls.includes("audit trail"));});
