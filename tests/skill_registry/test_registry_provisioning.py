@@ -4,6 +4,7 @@ import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 SCHEMA = ROOT / "schemas" / "skill-manifest.v1.schema.json"
+CERTIFICATION_SCHEMA = ROOT / "schemas" / "skill-certification.v1.schema.json"
 REGISTRY = ROOT / "registry" / "skills" / "registry.seed.v1.json"
 
 class SkillRegistryProvisioningTests(unittest.TestCase):
@@ -11,6 +12,13 @@ class SkillRegistryProvisioningTests(unittest.TestCase):
     def setUpClass(cls):
         cls.schema = json.loads(SCHEMA.read_text(encoding="utf-8"))
         cls.registry = json.loads(REGISTRY.read_text(encoding="utf-8"))
+
+    def test_certification_schema_is_closed_and_requires_all_gates(self):
+        certification = json.loads(CERTIFICATION_SCHEMA.read_text(encoding="utf-8"))
+        self.assertFalse(certification["additionalProperties"])
+        self.assertIn("gates", certification["required"])
+        self.assertIn("decision", certification["required"])
+        self.assertEqual(certification["properties"]["decision"]["properties"]["execution_eligible"]["const"], False)
 
     def test_schema_is_closed_and_requires_provenance(self):
         self.assertFalse(self.schema["additionalProperties"])
