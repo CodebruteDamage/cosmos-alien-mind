@@ -23,11 +23,24 @@ test("runtime adapter joins each definition to its matching unassessed snapshot"
   }
 });
 
-test("runtime adapter is read-only and never starts execution", () => {
+test("COSMAXX LT is the active lightweight read-only runtime profile", () => {
   const snapshot = getCosmaxxRuntimeSnapshot();
-  assert.equal(snapshot.mode, "read_only_registry_adapter");
+  assert.equal(snapshot.profile.id, "COSMAXX_LT");
+  assert.equal(snapshot.profile.version, "1.0.0");
+  assert.equal(snapshot.mode, "lightweight_read_only");
+  assert.equal(snapshot.version, "0.2.0");
   assert.equal(snapshot.executionStarted, false);
-  assert.equal(snapshot.adapter, "COSMAXX Runtime Adapter");
+});
+
+test("COSMAXX LT exposes governed capabilities without enabling execution", () => {
+  const { capabilities } = getCosmaxxRuntimeSnapshot().profile;
+  assert.equal(capabilities.registryRead, true);
+  assert.equal(capabilities.evidenceMetadataRead, true);
+  assert.equal(capabilities.guidanceDecisionInput, true);
+  assert.equal(capabilities.craftInvocation, "guidance_conditional");
+  assert.equal(capabilities.taskforceDispatch, false);
+  assert.equal(capabilities.sideEffectExecution, false);
+  assert.equal(capabilities.permissionManagement, false);
 });
 
 test("runtime adapter preserves registry evidence requirements for every domain", () => {
