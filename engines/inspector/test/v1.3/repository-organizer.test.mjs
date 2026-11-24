@@ -53,8 +53,9 @@ test("does not call cancelled workflows code failures", () => {
   const data = snapshot();
   data.repositories[0].workflows = [{ name: "CI", status: "cancelled" }];
   const report = buildRepositoryOrganizationPlan(data);
-  assert.equal(report.findings[0].severity, "MEDIUM");
-  assert.match(report.findings[0].recommendation, /do not treat cancellation as a code failure/);
+  const workflowFinding = report.findings.find(item => item.category === "WORKFLOW_NOT_GREEN");
+  assert.equal(workflowFinding.severity, "MEDIUM");
+  assert.match(workflowFinding.recommendation, /do not treat cancellation as a code failure/);
 });
 
 test("returns no findings for a protected clean inventory", () => {
