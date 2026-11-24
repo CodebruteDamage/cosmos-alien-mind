@@ -97,9 +97,10 @@ export function ParticleDissolveCanvas({geometry,particleCount=4000,className,la
       const meshPosBuffer=makeBuffer(meshPositions),meshNormalBuffer=makeBuffer(meshNormals);
       const pointPosBuffer=makeBuffer(pointPosition),pointNormalBuffer=makeBuffer(pointNormals),pointSeedBuffer=makeBuffer(pointSeeds);
       const vertexCount=meshPositions.length/3,pointCount=pointSeeds.length;
-      // Preview brush starts at the centroid of the sampled surface.
-      for(let i=0;i<pointCount;i++){previewPoint[0]+=pointPosition[i*3];previewPoint[1]+=pointPosition[i*3+1];previewPoint[2]+=pointPosition[i*3+2];}
-      previewPoint=previewPoint.map(v=>v/pointCount) as [number,number,number];
+      // Preview starts on an actual sampled surface point, never at a possibly empty centroid.
+      let frontIndex=0;
+      for(let i=1;i<pointCount;i++)if(pointPosition[i*3+2]>pointPosition[frontIndex*3+2])frontIndex=i;
+      previewPoint=[pointPosition[frontIndex*3],pointPosition[frontIndex*3+1],pointPosition[frontIndex*3+2]];
       const bind=(info:ProgramInfo,pos:WebGLBuffer,norm:WebGLBuffer,seed?:WebGLBuffer)=>{
         gl!.useProgram(info.program);
         gl!.bindBuffer(gl!.ARRAY_BUFFER,pos);gl!.enableVertexAttribArray(info.position);gl!.vertexAttribPointer(info.position,3,gl!.FLOAT,false,0,0);
