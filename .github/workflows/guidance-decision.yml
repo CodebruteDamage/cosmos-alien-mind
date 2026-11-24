@@ -1,16 +1,16 @@
-name: COSMOS Guidance Decision Checks
+name: COSMOS Guidance + CRAFT Checks
 
 on:
   pull_request:
     branches: [main]
   push:
-    branches: [feat/guidance-decision-engine-v1]
+    branches: [feat/guidance-decision-engine-v1, feat/guidance-craft-integration-v1]
 
 permissions:
   contents: read
 
 jobs:
-  guidance-decision:
+  guidance-craft:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -22,8 +22,8 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm install
-      - name: Guidance decision tests
-        run: node --experimental-strip-types --test tests/guidance-decision.test.mjs
+      - name: Guidance and CRAFT tests
+        run: node --experimental-strip-types --test tests/*.test.mjs engines/craft/tests/*.test.mjs
       - name: Type-check
         run: npx tsc --noEmit
       - name: Lint
