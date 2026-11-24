@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cosmos.local/schemas/skill-certification.v1.json",
+  "title": "COSMOS Skill Certification Record v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["record_version", "skill_id", "skill_version", "artifact_digest", "source", "license", "capabilities", "gates", "decision"],
+  "properties": {
+    "record_version": { "const": "1.0.0" },
+    "skill_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,79}$" },
+    "skill_version": { "type": "string" },
+    "artifact_digest": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+    "source": {
+      "type": "object", "additionalProperties": false,
+      "required": ["repository", "revision", "files"],
+      "properties": {
+        "repository": { "type": "string", "format": "uri" },
+        "revision": { "type": "string", "minLength": 7 },
+        "files": { "type": "array", "minItems": 1, "items": {
+          "type": "object", "additionalProperties": false, "required": ["path", "sha256"],
+          "properties": { "path": { "type": "string", "minLength": 1 }, "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" } }
+        }}
+      }
+    },
+    "license": {
+      "type": "object", "additionalProperties": false,
+      "required": ["spdx_id", "evidence_uri", "review_status"],
+      "properties": {
+        "spdx_id": { "type": "string" },
+        "evidence_uri": { "type": "string", "format": "uri" },
+        "review_status": { "enum": ["pending", "approved", "restricted", "rejected"] }
+      }
+    },
+    "capabilities": {
+      "type": "array", "uniqueItems": true,
+      "items": { "type": "object", "additionalProperties": false, "required": ["id", "scope", "approval_required"],
+        "properties": {
+          "id": { "type": "string" },
+          "scope": { "type": "array", "items": { "type": "string" } },
+          "approval_required": { "type": "boolean" }
+        }
+      }
+    },
+    "gates": {
+      "type": "object", "additionalProperties": false,
+      "required": ["G0_source", "G1_license", "G2_integrity", "G3_manifest", "G4_static_security", "G5_sandbox", "G6_warp_gate", "G7_independent_review", "G8_activation"],
+      "properties": {
+        "G0_source": { "$ref": "#/$defs/gate" }, "G1_license": { "$ref": "#/$defs/gate" },
+        "G2_integrity": { "$ref": "#/$defs/gate" }, "G3_manifest": { "$ref": "#/$defs/gate" },
+        "G4_static_security": { "$ref": "#/$defs/gate" }, "G5_sandbox": { "$ref": "#/$defs/gate" },
+        "G6_warp_gate": { "$ref": "#/$defs/gate" }, "G7_independent_review": { "$ref": "#/$defs/gate" },
+        "G8_activation": { "$ref": "#/$defs/gate" }
+      }
+    },
+    "decision": {
+      "type": "object", "additionalProperties": false, "required": ["certification_level", "execution_eligible", "status"],
+      "properties": {
+        "certification_level": { "enum": ["L0", "L1", "L2", "L3", "L4"] },
+        "execution_eligible": { "const": false },
+        "status": { "enum": ["not_certified", "conditionally_certified", "certified", "revoked"] },
+        "reviewer": { "type": ["string", "null"] },
+        "reviewed_at": { "type": ["string", "null"], "format": "date-time" },
+        "expiry_or_review_date": { "type": ["string", "null"], "format": "date" }
+      }
+    }
+  },
+  "$defs": {
+    "gate": {
+      "type": "object", "additionalProperties": false, "required": ["status", "evidence_refs"],
+      "properties": {
+        "status": { "enum": ["not_started", "pending", "passed", "failed", "not_applicable"] },
+        "evidence_refs": { "type": "array", "items": { "type": "string" } },
+        "findings": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}
