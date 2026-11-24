@@ -1,0 +1,44 @@
+{
+  "registry_version": "1.0.0",
+  "status": "provisioning",
+  "execution_enabled": false,
+  "policy_enforcement": "WARP_GATE_REQUIRED",
+  "entries": [
+    {
+      "skill_id": "systematic-debugging",
+      "display_name": "Systematic Debugging",
+      "lifecycle": "proposed",
+      "source_verification": "pending",
+      "license_review": "pending",
+      "manifest_status": "not_created",
+      "sandbox_status": "not_started",
+      "risk_tier": "moderate",
+      "requested_capabilities": [],
+      "notes": "Pilot candidate. Offline guidance and synthetic test fixtures only; no shell capability."
+    },
+    {
+      "skill_id": "webapp-testing",
+      "display_name": "Webapp Testing",
+      "lifecycle": "proposed",
+      "source_verification": "pending",
+      "license_review": "pending",
+      "manifest_status": "not_created",
+      "sandbox_status": "not_started",
+      "risk_tier": "high",
+      "requested_capabilities": [],
+      "notes": "Pilot candidate. Isolated test target and synthetic accounts only; no production credentials."
+    },
+    {
+      "skill_id": "skill-creator",
+      "display_name": "Skill Creator",
+      "lifecycle": "proposed",
+      "source_verification": "pending",
+      "license_review": "pending",
+      "manifest_status": "not_created",
+      "sandbox_status": "not_started",
+      "risk_tier": "high",
+      "requested_capabilities": [],
+      "notes": "Pilot candidate. Draft output must remain quarantined; cannot approve or enable its own output."
+    }
+  ]
+}
