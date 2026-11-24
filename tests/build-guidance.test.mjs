@@ -16,3 +16,21 @@ test("modular guidance registry exposes eight distinct modules",()=>{
  assert.ok(r.moduleRecommendations.some(x=>x.id==="integration"));
  assert.ok(r.moduleRecommendations.some(x=>x.id==="risk-craft"));
 });
+
+import {attachEvidenceAssessment} from "../lib/build-guidance/evidence-adapter.mjs";
+import {evaluateEvidence} from "../lib/evidence-engine/engine.mjs";
+test("evidence assessment is attached without granting execution",()=>{
+ const guidance=generateBuildGuidance({objective:"Build a modular evidence-backed integration engine"});
+ const report=evaluateEvidence({records:[{source:"unit-test",sourceTier:"first_party",subject:"build",claim:"Tests completed",value:"pass",collectedAt:"2026-11-24T12:00:00Z"}]},{now:"2026-11-24T13:00:00Z"});
+ const integrated=attachEvidenceAssessment(guidance,report);
+ assert.equal(integrated.evidenceAssessment.recommendationStatus,"EVIDENCE_ASSESSED");
+ assert.equal(integrated.executionAuthorized,false);
+});
+test("conflicted evidence requires review",()=>{
+ const guidance=generateBuildGuidance({objective:"Build a modular evidence-backed integration engine"});
+ const common={source:"test",sourceTier:"first_party",subject:"build",claim:"Tests",claimKey:"tests",collectedAt:"2026-11-24T12:00:00Z"};
+ const report=evaluateEvidence({records:[{...common,value:"pass"},{...common,value:"fail"}]},{now:"2026-11-24T13:00:00Z"});
+ const integrated=attachEvidenceAssessment(guidance,report);
+ assert.equal(integrated.evidenceAssessment.recommendationStatus,"EVIDENCE_REVIEW_REQUIRED");
+ assert.equal(integrated.executionAuthorized,false);
+});
