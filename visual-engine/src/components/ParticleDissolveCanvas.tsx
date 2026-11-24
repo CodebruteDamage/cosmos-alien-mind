@@ -75,14 +75,22 @@ export function ParticleDissolveCanvas({geometry,particleCount=4000,className,la
     let particleData:{positions:Float32Array;normals:Float32Array;seeds:Float32Array};
     try{
       particleData=sampleSurface(geometry,cappedCount,722);
-      const normals=faceNormals(geometry);
+      const vertexNormals=faceNormals(geometry);
+      // Expand indexed geometry so WebGL1 drawArrays follows the original triangle index order.
+      const cornerCount=geometry.indices?.length??geometry.positions.length/3;
+      const meshPositions=new Float32Array(cornerCount*3),meshNormals=new Float32Array(cornerCount*3);
+      for(let corner=0;corner<cornerCount;corner++){
+        const vertex=geometry.indices?Number(geometry.indices[corner]):corner;
+        for(let axis=0;axis<3;axis++){
+          meshPositions[corner*3+axis]=Number(geometry.positions[vertex*3+axis]);
+          meshNormals[corner*3+axis]=vertexNormals[vertex*3+axis];
+        }
+      }
       gl=canvas.getContext("webgl",{alpha:true,antialias:true,depth:true,powerPreference:"low-power"});
       if(!gl)throw new Error("WebGL is unavailable on this device");
       solid=createProgram(gl,SOLID_VERTEX,SOLID_FRAGMENT);
       particles=createProgram(gl,PARTICLE_VERTEX,PARTICLE_FRAGMENT);
       const makeBuffer=(data:BufferSource)=>{const buffer=gl!.createBuffer();if(!buffer)throw new Error("Unable to allocate GPU buffer");buffers.push(buffer);gl!.bindBuffer(gl!.ARRAY_BUFFER,buffer);gl!.bufferData(gl!.ARRAY_BUFFER,data,gl!.STATIC_DRAW);return buffer;};
-      const meshPositions=Float32Array.from(geometry.positions);
-      const meshNormals=normals;
       const pointPosition=particleData.positions,pointNormals=particleData.normals,pointSeeds=particleData.seeds;
       const meshPosBuffer=makeBuffer(meshPositions),meshNormalBuffer=makeBuffer(meshNormals);
       const pointPosBuffer=makeBuffer(pointPosition),pointNormalBuffer=makeBuffer(pointNormals),pointSeedBuffer=makeBuffer(pointSeeds);
@@ -107,7 +115,7 @@ export function ParticleDissolveCanvas({geometry,particleCount=4000,className,la
         raf=0;if(disposed||!gl||!solid||!particles)return;
         const dt=Math.min(.05,(now-last)/1000||.016);last=now;
         const target=motion.matches?0:active||preview?1:0;
-        exposure=damp(exposure,target,target>exposure?8:3.5,dt);
+        exposure=motion.matches?0:damp(exposure,target,target>exposure?8:3.5,dt);
         const next=active?aim:preview?previewPoint:brush;
         const blend=1-Math.exp(-16*dt);
         for(let i=0;i<3;i++)brush[i]+=(next[i]-brush[i])*blend;
@@ -127,7 +135,7 @@ export function ParticleDissolveCanvas({geometry,particleCount=4000,className,la
         bind(particles!,pointPosBuffer,pointNormalBuffer,pointSeedBuffer);
         gl!.drawArrays(gl!.POINTS,0,pointCount);
         gl!.depthMask(true);gl!.disable(gl!.BLEND);
-        if(!motion.matches&&(target>0||exposure>.002))raf=requestAnimationFrame(draw);
+        if(target>0||exposure>.002)raf=requestAnimationFrame(draw);
       };
       const schedule=()=>{if(!raf&&!disposed)raf=requestAnimationFrame(draw);};
       const pointer=(event:PointerEvent)=>{
