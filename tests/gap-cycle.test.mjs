@@ -41,7 +41,7 @@ test("holds at PROVISION when dependencies are not ready", () => {
 });
 
 test("requires scope authorization and action-specific approval for risky builds", () => {
-  const result = evaluateGapTransition({ ...base, currentStageId: "OPTIMIZATION", nextStageId: "BUILD", riskClass: "R3", scopeApproved: false });
+  const result = evaluateGapTransition({ ...base, currentStageId: "PROVISION", nextStageId: "BUILD", riskClass: "R3", scopeApproved: false });
   assert.equal(result.allowed, false);
   assert.ok(result.requiredEvidence.includes("explicit in-scope build authorization"));
   assert.ok(result.requiredEvidence.includes("action-specific approval for R2/R3 work"));
