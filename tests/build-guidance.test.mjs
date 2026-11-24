@@ -11,10 +11,11 @@ test("recommendations never grant execution",()=>{const r=generateBuildGuidance(
 
 test("modular guidance registry exposes eight distinct modules",()=>{
  const r=generateBuildGuidance({objective:"Integrate Android Termux device bridge with cloud Neon heartbeat"});
- assert.equal(r.moduleRecommendations.length,8);
+ assert.equal(r.moduleRecommendations.length,9);
  assert.equal(new Set(r.moduleRecommendations.map(x=>x.id)).size,8);
  assert.ok(r.moduleRecommendations.some(x=>x.id==="integration"));
  assert.ok(r.moduleRecommendations.some(x=>x.id==="risk-craft"));
+ assert.ok(r.moduleRecommendations.some(x=>x.id==="evidence"));
 });
 
 import {attachEvidenceAssessment} from "../lib/build-guidance/evidence-adapter.mjs";
