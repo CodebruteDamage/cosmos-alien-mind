@@ -1,0 +1,25 @@
+name: COSMOS INSPECTOR Repository Organizer
+
+on:
+  push:
+    branches:
+      - feat/cosmos-inspector-repo-organizer-v1
+  pull_request:
+    branches:
+      - main
+      - feat/cosmos-inspector-v1
+
+permissions:
+  contents: read
+
+jobs:
+  inspector:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate Inspector v1.2 and v1.3
+        run: npm run test:inspector:all
