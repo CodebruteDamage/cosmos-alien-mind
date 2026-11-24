@@ -37,3 +37,7 @@ Import this repository into Vercel (or connect it to the existing Cosmos deploym
 - This MVP does not yet authenticate users. Do not store sensitive/private conversations or expose the public write endpoint as a production service until authentication, authorization, rate limiting, and abuse protection are added.
 - The health route returns only generic failure status; it does not expose credentials.
 - Real AI inference should be added as a server-side provider adapter with secret keys held only in server environment variables.
+
+## Governed automation build procedure
+
+Use the [COSMOS Governed Automation Build Procedure v1.0](docs/build/COSMOS-GOVERNED-AUTOMATION-BUILD-PROCEDURE-v1.md) for all implementation runs. It defines the blocker-first loop across Auto Guidance, the Guidance Decision Engine, recommendation-only CRAFT, the existing authorized orchestrator, and WARP GATE. Start with a 1x1 build; move to a full build only after dependencies and interfaces are verified. No side effect is permitted without an exact-scope WARP GATE authorization and verified grant. The procedure does not claim that live WARP GATE runtime integration is complete.
