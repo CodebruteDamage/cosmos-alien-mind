@@ -31,7 +31,7 @@ export const PROMPT_COMMANDS: PromptCommand[] = [
 
 export function recommendPromptCommand(prompt: string) {
   const normalized = prompt.trim().toLowerCase();
-  const explicit = normalized.match(/^\/([a-z-]+)(?:\\s|$)/);
+  const explicit = normalized.match(/^\/([a-z-]+)(?:\s|$)/);
   if (explicit) {
     const command = PROMPT_COMMANDS.find((item) => item.command === `/${explicit[1]}`);
     return command ? { status: "matched" as const, command, alternatives: [] } : { status: "unknown_command" as const, command: null, alternatives: [] };
