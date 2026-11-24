@@ -21,7 +21,7 @@ function client(decision = "ALLOW", overrides = {}) {
       ...overrides,
     },
     executionGrant: "opaque-test-grant",
-  }) };
+  }), verifyAndConsumeGrant: async () => true };
 }
 
 test("accepts explicit ALLOW with matching decision record and grant", async () => {
@@ -56,8 +56,18 @@ test("fails closed when execution grant is absent", async () => {
   assert.equal(result.reason, "execution_grant_missing");
 });
 
+test("fails closed when execution grant verification fails", async () => {
+  const base = client();
+  const result = await authorizeLifecycle({
+    authorize: base.authorize,
+    verifyAndConsumeGrant: async () => false,
+  }, request);
+  assert.equal(result.authorized, false);
+  assert.equal(result.reason, "execution_grant_invalid");
+});
+
 test("fails closed when WARP GATE is unavailable", async () => {
-  const result = await authorizeLifecycle({ authorize: async () => { throw new Error("offline"); } }, request);
+  const result = await authorizeLifecycle({ authorize: async () => { throw new Error("offline"); }, verifyAndConsumeGrant: async () => false }, request);
   assert.equal(result.authorized, false);
   assert.equal(result.decision, "BLOCKED");
 });
