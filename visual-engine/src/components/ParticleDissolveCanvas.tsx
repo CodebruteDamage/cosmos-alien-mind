@@ -51,6 +51,7 @@ function faceNormals(geometry:SurfaceGeometry):Float32Array {
 export function ParticleDissolveCanvas({geometry,particleCount=4000,className,label="Interactive 3D surface that dissolves into particles",enabled=true}:ParticleDissolveCanvasProps){
   const canvasRef=useRef<HTMLCanvasElement>(null);
   const previewRef=useRef(false);
+  const scheduleRef=useRef<()=>void>(()=>{});
   const [preview,setPreview]=useState(false);
   const [fallback,setFallback]=useState(false);
   const [error,setError]=useState("");
@@ -139,6 +140,7 @@ export function ParticleDissolveCanvas({geometry,particleCount=4000,className,la
         if(target>0||exposure>.002)raf=requestAnimationFrame(draw);
       };
       const schedule=()=>{if(!raf&&!disposed)raf=requestAnimationFrame(draw);};
+      scheduleRef.current=schedule;
       const pointer=(event:PointerEvent)=>{
         const rect=canvas.getBoundingClientRect(),aspect=rect.width/Math.max(1,rect.height);
         const ndcX=((event.clientX-rect.left)/rect.width)*2-1,ndcY=1-((event.clientY-rect.top)/rect.height)*2;
@@ -158,7 +160,7 @@ export function ParticleDissolveCanvas({geometry,particleCount=4000,className,la
       observer=new ResizeObserver(()=>{resize();schedule();});observer.observe(canvas);
       resize();schedule();setFallback(false);setError("");
       return()=>{
-        disposed=true;if(raf)cancelAnimationFrame(raf);
+        disposed=true;scheduleRef.current=()=>{};if(raf)cancelAnimationFrame(raf);
         observer?.disconnect();
         canvas.removeEventListener("pointermove",pointer);canvas.removeEventListener("pointerdown",pointer);
         canvas.removeEventListener("pointerleave",release);canvas.removeEventListener("pointercancel",release);canvas.removeEventListener("pointerup",release);
@@ -171,7 +173,7 @@ export function ParticleDissolveCanvas({geometry,particleCount=4000,className,la
     }
   },[geometry,particleCount,enabled]);
 
-  const togglePreview=()=>{const next=!previewRef.current;previewRef.current=next;setPreview(next);};
+  const togglePreview=()=>{const next=!previewRef.current;previewRef.current=next;setPreview(next);scheduleRef.current();};
   return <section className={className??"cosmos-particle-dissolve"} aria-label={label}>
     <div className="cosmos-particle-stage">
       <canvas ref={canvasRef} aria-label={label} role="img" />
