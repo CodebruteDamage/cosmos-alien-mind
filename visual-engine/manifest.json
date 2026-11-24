@@ -1,0 +1,21 @@
+{
+  "name": "cosmos-particle-dissolve",
+  "version": "1.0.0",
+  "status": "foundation",
+  "category": "presentation-only",
+  "runtime_dependencies": [],
+  "permissions": [],
+  "data_access": [],
+  "entrypoint": "src/index.ts",
+  "constraints": {
+    "network_access": false,
+    "neon_access": false,
+    "model_provider_access": false,
+    "secret_access": false,
+    "governance_mutation": false,
+    "default_particle_budget": 4000,
+    "maximum_particle_budget": 12000,
+    "reduced_motion_supported": true,
+    "static_fallback_required": true
+  }
+}
