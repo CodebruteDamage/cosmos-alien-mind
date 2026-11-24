@@ -17,7 +17,8 @@ function authorized(request: Request) {
   return createHash("sha256").update(expected).digest("hex") === actual;
 }
 
-function toCraftBlockers(findings: Array<Record<string, unknown>>, evidenceBySubject: Map<string, any>) {
+type FindingEvidence = { quality?: { confidence?: number }; status?: "VERIFIED" | "OBSERVED" | "INFERRED" | "UNVERIFIED" | "CONFLICTED" | "STALE" };
+function toCraftBlockers(findings: Array<Record<string, unknown>>, evidenceBySubject: Map<string, FindingEvidence>) {
   return findings.map((item, index) => {
     const evidence = evidenceBySubject.get(String(item.subject)) ?? null;
     const severity = item.severity;
@@ -72,7 +73,7 @@ export async function GET(request: Request) {
     });
 
     const evidenceBySubject = new Map<string, { quality?: { confidence?: number }; status?: string }>();
-    const inventoryEvidence = evidence.findings[0];
+    const inventoryEvidence = evidence.findings[0] as FindingEvidence;
     for (const item of organization.findings) evidenceBySubject.set(String(item.subject), inventoryEvidence);
     const blockers = toCraftBlockers(organization.findings as unknown as Array<Record<string, unknown>>, evidenceBySubject);
     const craft = blockers.length
