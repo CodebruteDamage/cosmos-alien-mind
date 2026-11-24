@@ -12,13 +12,9 @@ export const dynamic = "force-dynamic";
 
 function authorized(request: Request) {
   const expected = process.env.COSMOS_INSPECTOR_ACCESS_TOKEN;
-  if (!expected || expected.length < 24) return false;
-  const supplied = request.headers.get("authorization") || "";
-  const prefix = "Bearer ";
-  if (!supplied.startsWith(prefix)) return false;
-  const actual = supplied.slice(prefix.length);
-  if (actual.length !== expected.length) return false;
-  return createHash("sha256").update(actual).digest("hex") === createHash("sha256").update(expected).digest("hex");
+  const actual = request.cookies.get("cosmos_inspector_session")?.value;
+  if (!expected || expected.length < 24 || !actual || actual.length !== 64) return false;
+  return createHash("sha256").update(expected).digest("hex") === actual;
 }
 
 function toCraftBlockers(findings: Array<Record<string, unknown>>, evidenceBySubject: Map<string, any>) {
@@ -36,7 +32,7 @@ function toCraftBlockers(findings: Array<Record<string, unknown>>, evidenceBySub
       likelihood: isFailure ? 4 : 3,
       urgency: severity === "CRITICAL" || severity === "HIGH" ? 4 : 2,
       evidenceConfidence: evidence?.quality?.confidence ?? 0,
-      evidenceStatus: evidence?.status ?? "UNVERIFIED"
+      evidenceStatus: (evidence?.status ?? "UNVERIFIED") as "VERIFIED" | "OBSERVED" | "INFERRED" | "UNVERIFIED" | "CONFLICTED" | "STALE"
     };
   });
 }
@@ -75,7 +71,9 @@ export async function GET(request: Request) {
       }]
     });
 
-    const evidenceBySubject = new Map(evidence.findings.map(item => [item.subject, item]));
+    const evidenceBySubject = new Map<string, { quality?: { confidence?: number }; status?: string }>();
+    const inventoryEvidence = evidence.findings[0];
+    for (const item of organization.findings) evidenceBySubject.set(String(item.subject), inventoryEvidence);
     const blockers = toCraftBlockers(organization.findings as unknown as Array<Record<string, unknown>>, evidenceBySubject);
     const craft = blockers.length
       ? triageCraft({ blockers })
