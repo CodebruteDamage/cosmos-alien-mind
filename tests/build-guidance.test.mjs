@@ -8,3 +8,11 @@ test("destructive intent is flagged",()=>{const r=generateBuildGuidance({objecti
 test("explicit types override inference",()=>{const r=generateBuildGuidance({objective:"Connect Android to cloud",buildTypes:["BT-02"]});assert.deepEqual(r.classification.buildTypes.map(x=>x.id),["BT-02"]);});
 test("invalid input is rejected",()=>{assert.throws(()=>generateBuildGuidance({objective:"short"}),/objective/);assert.throws(()=>generateBuildGuidance({objective:"Build a modular system",buildTypes:["BT-99"]}),/unsupported build type/);});
 test("recommendations never grant execution",()=>{const r=generateBuildGuidance({objective:"Create an agentic autonomous workflow engine"});assert.equal(r.executionAuthorized,false);assert.equal(r.governance.defaultDecision,"deny");assert.ok(r.governance.approvalsRequired.length>=3);});
+
+test("modular guidance registry exposes eight distinct modules",()=>{
+ const r=generateBuildGuidance({objective:"Integrate Android Termux device bridge with cloud Neon heartbeat"});
+ assert.equal(r.moduleRecommendations.length,8);
+ assert.equal(new Set(r.moduleRecommendations.map(x=>x.id)).size,8);
+ assert.ok(r.moduleRecommendations.some(x=>x.id==="integration"));
+ assert.ok(r.moduleRecommendations.some(x=>x.id==="risk-craft"));
+});
