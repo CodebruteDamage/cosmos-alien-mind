@@ -4,6 +4,7 @@ import {
   type CosmaxxDomainAssessment,
   type CosmaxxDomainDefinition,
 } from "./seven-domain-registry.ts";
+import { COSMAXX_LT_PROFILE } from "./lightweight-profile.ts";
 
 export type CosmaxxRuntimeDomain = {
   definition: CosmaxxDomainDefinition;
@@ -12,8 +13,9 @@ export type CosmaxxRuntimeDomain = {
 
 export type CosmaxxRuntimeSnapshot = {
   adapter: "COSMAXX Runtime Adapter";
-  version: "0.1.0";
-  mode: "read_only_registry_adapter";
+  version: "0.2.0";
+  profile: typeof COSMAXX_LT_PROFILE;
+  mode: "lightweight_read_only";
   executionStarted: false;
   domains: readonly CosmaxxRuntimeDomain[];
 };
@@ -29,8 +31,9 @@ export function getCosmaxxRuntimeSnapshot(): CosmaxxRuntimeSnapshot {
 
   return Object.freeze({
     adapter: "COSMAXX Runtime Adapter",
-    version: "0.1.0",
-    mode: "read_only_registry_adapter",
+    version: "0.2.0",
+    profile: COSMAXX_LT_PROFILE,
+    mode: "lightweight_read_only",
     executionStarted: false,
     domains: Object.freeze(domains),
   });
