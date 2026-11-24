@@ -1,0 +1,22 @@
+name: M1.2 Governance Contract Tests
+
+on:
+  push:
+    branches:
+      - integration/m1-warp-gate-clc-contract
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  contract-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm install
+      - run: npx tsc --noEmit
+      - run: npm run test:contracts
