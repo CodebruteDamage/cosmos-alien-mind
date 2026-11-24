@@ -1,0 +1,13 @@
+.cosmos-particle-dissolve{display:grid;gap:12px;width:100%;color:#e7eff4}
+.cosmos-particle-stage{position:relative;min-height:300px;aspect-ratio:16/10;overflow:hidden;border:1px solid rgba(133,177,202,.2);border-radius:16px;background:radial-gradient(ellipse at 50% 45%,#24394b,#101c29 68%,#0a121b)}
+.cosmos-particle-stage canvas{display:block;width:100%;height:100%;touch-action:pan-y}
+.cosmos-visual-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.cosmos-visual-controls button{border:1px solid #587189;border-radius:24px;background:#132231;color:#e7eff4;padding:9px 15px;cursor:pointer}
+.cosmos-visual-controls button:focus-visible{outline:2px solid #b6ffec;outline-offset:4px}
+.cosmos-visual-controls button:disabled{opacity:.5;cursor:not-allowed}
+.cosmos-visual-controls span,.cosmos-visual-error{font-size:12px;color:#a8b8c8}
+.cosmos-visual-fallback{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+.cosmos-fallback-core{width:120px;height:120px;border-radius:50%;background:radial-gradient(circle at 32% 28%,#c8e5ee,#47728c 45%,#152d40 78%);box-shadow:0 0 55px #6bc6dc55,inset -15px -15px 24px #07121c}
+.cosmos-fallback-orbit{position:absolute;width:230px;height:70px;border:1px solid #9bcbd866;border-radius:50%;transform:rotate(-22deg)}
+.cosmos-visual-error{position:absolute;left:12px;right:12px;bottom:8px;text-align:center}
+@media(prefers-reduced-motion:reduce){.cosmos-particle-stage *{animation:none!important;transition:none!important}}
