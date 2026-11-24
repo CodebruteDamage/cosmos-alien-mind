@@ -1,12 +1,5 @@
-export interface EvidenceAssessmentReport {
- schema: "cosmos.evidence-report.v1";
- recordCount: number;
- counts: Record<string, number>;
- conflictCount: number;
- overallConfidence: number;
- findings: Array<{ evidenceId?: string } & Record<string, unknown>>;
- limitations: string[];
-}
+import type { EvidenceAssessmentReport } from "../evidence-engine/engine.mjs";
+export type { EvidenceAssessmentReport } from "../evidence-engine/engine.mjs";
 export function attachEvidenceAssessment(
  guidance: Record<string, unknown>,
  report: EvidenceAssessmentReport
