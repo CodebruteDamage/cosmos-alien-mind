@@ -1,0 +1,29 @@
+name: COSMOS Build Guidance Validation
+on:
+  push:
+    branches:
+      - cosmos/build-guidance-engine-v1
+  pull_request:
+    branches:
+      - main
+      - cosmos/platform-build-types-v1
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Build guidance unit tests
+        run: node --test tests/build-guidance.test.mjs
+      - name: Type check
+        run: npx tsc --noEmit
+      - name: Lint
+        run: npm run lint
+      - name: Production build
+        run: npm run build
