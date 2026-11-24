@@ -1,0 +1,30 @@
+name: COSMOS INSPECTOR GitHub Integration
+
+on:
+  push:
+    branches:
+      - integration/cosmos-inspector-github-evidence-v1
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Inspector and CRAFT tests
+        run: npm run test:inspector && npm run test:craft
+      - name: Lint
+        run: npm run lint
+      - name: Production build
+        run: npm run build
