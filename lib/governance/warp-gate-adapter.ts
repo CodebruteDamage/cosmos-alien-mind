@@ -44,6 +44,10 @@ export interface WarpGateAuthorizationResult {
 
 export interface WarpGateClient {
   authorize(request: LifecycleAuthorizationRequest): Promise<WarpGateAuthorizationResult>;
+  verifyAndConsumeGrant(
+    grant: string,
+    request: LifecycleAuthorizationRequest,
+  ): Promise<boolean>;
 }
 
 export type AuthorizationOutcome =
@@ -91,6 +95,12 @@ export async function authorizeLifecycle(
     }
     if (!result.executionGrant || typeof result.executionGrant !== "string") {
       return { authorized: false, decision: "BLOCKED", reason: "execution_grant_missing", record: result.record };
+    }
+    // Verification must validate signature, issuer/audience, expiry, tenant,
+    // execution, capability/action, exact scope, policy version and single use.
+    const grantValid = await client.verifyAndConsumeGrant(result.executionGrant, request);
+    if (grantValid !== true) {
+      return { authorized: false, decision: "BLOCKED", reason: "execution_grant_invalid", record: result.record };
     }
     return { authorized: true, decision: "ALLOW", record: result.record };
   } catch {
