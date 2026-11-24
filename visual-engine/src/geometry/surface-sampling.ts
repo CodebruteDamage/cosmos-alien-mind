@@ -79,8 +79,12 @@ export function sampleSurface(geometry:SurfaceGeometry,count:number,seed=722):Su
       positions[i*3+axis]=p;
       normals[i*3+axis]=geometry.normals&&Number.isFinite(n)?n:(axis===0?tri.nx:axis===1?tri.ny:tri.nz);
     }
-    const nx=normals[i*3],ny=normals[i*3+1],nz=normals[i*3+2],length=Math.hypot(nx,ny,nz)||1;
-    normals[i*3]/=length;normals[i*3+1]/=length;normals[i*3+2]/=length;
+    const nx=normals[i*3],ny=normals[i*3+1],nz=normals[i*3+2],length=Math.hypot(nx,ny,nz);
+    if(!Number.isFinite(length)||length<=1e-12){
+      normals[i*3]=tri.nx;normals[i*3+1]=tri.ny;normals[i*3+2]=tri.nz;
+    }else{
+      normals[i*3]/=length;normals[i*3+1]/=length;normals[i*3+2]/=length;
+    }
     seeds[i]=random();sourceTriangles[i]=triIndex;
   }
   return {positions,normals,seeds,sourceTriangles};
