@@ -1,6 +1,6 @@
 # COSMOS MAXX + CRAFT — Blocker Auto-Build Milestones v1.0
 
-Status: staged implementation plan; M0–M1 contracts and preview are in progress.
+Status: M2/M3/M4 interface and proposal prototype committed; live ingestion, persistent storage, policy enforcement, and execution remain pending.
 Repository: CodebruteDamage/cosmos-alien-mind
 Working branch: feature/cosmos-office-maxx-workforce-live-v1
 
@@ -34,19 +34,22 @@ Build MAXX as the evidence-led multi-analyzer and decision layer. Add CRAFT as i
 - Analyzer registry and board definitions.
 - Evidence/provenance panel, confidence rationale, limitations, comparison, and decision summary.
 - Missing evidence renders unknown, never a fabricated score.
-- Exit: read-only board with deterministic fixtures and empty/error states.
+- Current: read-only MAXX shell and versioned analysis/evidence contracts exist; analyzer registry remains disconnected and the score cards are explicitly illustrative.
+- Exit: connect authenticated analyzer outputs and verify evidence lineage.
 
 ### M3 — CRAFT blocker desk
 - Ingest build, lint, test, dependency, integration, and policy blockers from authorized sources.
 - Deduplicate by stable fingerprint; preserve first-seen/last-seen and source snapshots.
 - Classify severity/category and show causal evidence.
-- Exit: blocker list, detail, evidence timeline, and traceable proposed remediation.
+- Current: CRAFT blocker schema and MAXX analysis references added; read-only API and `/office` blocker desk show one clearly labeled historical CI fixture with evidence provenance. Live CI ingestion, deduplication, and persistence are not implemented.
+- Exit: authenticated CI/analyzer ingestion, stable fingerprinting, and persistent blocker history.
 
 ### M4 — Remediation planner
 - Generate bounded, reviewable plans with preconditions, expected changes, risk, rollback, and verification criteria.
 - Separate plan generation from execution.
 - Retry budget, timeout, idempotency key, and stop conditions are mandatory.
-- Exit: plans can be reviewed and approved; no automatic command execution yet.
+- Current: API generates a draft plan for the demo blocker with risk, expected evidence, rollback, and verification criteria. It is non-executable and not persisted; approval workflow is not implemented.
+- Exit: persist plans, implement review/approval records, and test idempotency and stop conditions.
 
 ### M5 — WARP GATE enforcement
 - Server-side actor, capability, target scope, action kind, risk, policy version, and approval evaluation.
@@ -77,3 +80,10 @@ Automation may autonomously inspect, classify, compare, draft plans, run read-on
 
 ## Completion definition
 A milestone is complete only when its acceptance criteria pass and the repository contains the evidence (tests, logs, commit, deployment metadata, and audit records). A UI label or deployment URL alone is not proof of operational capability.
+
+
+## Latest implementation record
+- CRAFT contracts now link blocker records to MAXX `analysisIds` and evidence references.
+- `GET /api/office/craft` serves a clearly marked static fixture; `POST /api/office/craft` generates a non-executable draft proposal for a known fixture.
+- COSMOS OFFICE includes a CRAFT Blocker Desk view with evidence details and a remediation proposal panel.
+- No live CI ingestion, database persistence, WARP GATE decision endpoint, command runner, or repository mutation path was added.
