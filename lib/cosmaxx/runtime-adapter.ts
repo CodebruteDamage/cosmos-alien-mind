@@ -1,6 +1,7 @@
 import {
   COSMAXX_CONTRACT_VERSION,
   COSMOS_DOMAIN_IDS,
+  type AuthorizationDecision,
   type CosmaxxAuthorization,
   type CosmaxxOptimizer,
   type OptimizationRecommendation,
@@ -106,7 +107,7 @@ export class CosmaxxRuntimeAdapter {
       return this.result(base, "rejected", [], requestErrors);
     }
 
-    let authorization;
+    let authorization: AuthorizationDecision;
     try {
       authorization = await this.options.authorization.authorize(request);
     } catch {
