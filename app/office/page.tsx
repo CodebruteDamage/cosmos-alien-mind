@@ -46,7 +46,7 @@ export default function CosmosOfficePage(){
    <button className={active==="maxx"?styles.navActive:styles.navItem} onClick={()=>select("maxx")}><span>⌘</span> MAXX Analyzer</button>
    <button className={active==="craft"?styles.navActive:styles.navItem} onClick={()=>select("craft")}><span>⚒</span> CRAFT Blockers</button>
    <div className={styles.workspaceLabel}>APPLICATIONS</div>
-   {modules.filter(m=>!["workforce","maxx"].includes(m.id)).map(m=><button key={m.id} className={active===m.id?styles.navActive:styles.navItem} onClick={()=>select(m.id)}><span>{m.symbol}</span>{m.name}</button>)}
+   {modules.filter(m=>!["workforce","maxx","craft"].includes(m.id)).map(m=><button key={m.id} className={active===m.id?styles.navActive:styles.navItem} onClick={()=>select(m.id)}><span>{m.symbol}</span>{m.name}</button>)}
    <div className={styles.sidebarFoot}><span className={styles.statusDot}/><span>Development preview</span><small>Demo fixtures · integrations pending</small></div>
   </aside>
   <section className={styles.main}>
