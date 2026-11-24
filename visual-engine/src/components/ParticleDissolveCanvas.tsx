@@ -50,6 +50,7 @@ function faceNormals(geometry:SurfaceGeometry):Float32Array {
 
 export function ParticleDissolveCanvas({geometry,particleCount=4000,className,label="Interactive 3D surface that dissolves into particles",enabled=true}:ParticleDissolveCanvasProps){
   const canvasRef=useRef<HTMLCanvasElement>(null);
+  const previewRef=useRef(false);
   const [preview,setPreview]=useState(false);
   const [fallback,setFallback]=useState(false);
   const [error,setError]=useState("");
@@ -57,7 +58,7 @@ export function ParticleDissolveCanvas({geometry,particleCount=4000,className,la
 
   useEffect(()=>{
     const media=window.matchMedia("(prefers-reduced-motion: reduce)");
-    const update=()=>{setReducedMotion(media.matches);if(media.matches)setPreview(false);};
+    const update=()=>{setReducedMotion(media.matches);if(media.matches){previewRef.current=false;setPreview(false);}};
     update();media.addEventListener?.("change",update);
     return()=>media.removeEventListener?.("change",update);
   },[]);
@@ -114,9 +115,9 @@ export function ParticleDissolveCanvas({geometry,particleCount=4000,className,la
       const draw=(now:number)=>{
         raf=0;if(disposed||!gl||!solid||!particles)return;
         const dt=Math.min(.05,(now-last)/1000||.016);last=now;
-        const target=motion.matches?0:active||preview?1:0;
+        const target=motion.matches?0:active||previewRef.current?1:0;
         exposure=motion.matches?0:damp(exposure,target,target>exposure?8:3.5,dt);
-        const next=active?aim:preview?previewPoint:brush;
+        const next=active?aim:previewRef.current?previewPoint:brush;
         const blend=1-Math.exp(-16*dt);
         for(let i=0;i<3;i++)brush[i]+=(next[i]-brush[i])*blend;
         const width=canvas.width,height=canvas.height,aspect=width/Math.max(1,height);
@@ -148,10 +149,10 @@ export function ParticleDissolveCanvas({geometry,particleCount=4000,className,la
         schedule();
       };
       const release=()=>{active=false;schedule();};
-      const onVisibility=()=>{if(document.hidden){active=false;setPreview(false);}schedule();};
+      const onVisibility=()=>{if(document.hidden){active=false;previewRef.current=false;setPreview(false);}schedule();};
       const onContextLost=(event:Event)=>{event.preventDefault();disposed=true;if(raf)cancelAnimationFrame(raf);setError("Graphics context lost. Reload this visual to try again.");setFallback(true);};
       canvas.addEventListener("pointermove",pointer);canvas.addEventListener("pointerdown",pointer);
-      canvas.addEventListener("pointerleave",release);canvas.addEventListener("pointercancel",release);
+      canvas.addEventListener("pointerleave",release);canvas.addEventListener("pointercancel",release);canvas.addEventListener("pointerup",release);
       window.addEventListener("blur",release);document.addEventListener("visibilitychange",onVisibility);
       canvas.addEventListener("webglcontextlost",onContextLost,false);
       observer=new ResizeObserver(()=>{resize();schedule();});observer.observe(canvas);
@@ -160,7 +161,7 @@ export function ParticleDissolveCanvas({geometry,particleCount=4000,className,la
         disposed=true;if(raf)cancelAnimationFrame(raf);
         observer?.disconnect();
         canvas.removeEventListener("pointermove",pointer);canvas.removeEventListener("pointerdown",pointer);
-        canvas.removeEventListener("pointerleave",release);canvas.removeEventListener("pointercancel",release);
+        canvas.removeEventListener("pointerleave",release);canvas.removeEventListener("pointercancel",release);canvas.removeEventListener("pointerup",release);
         window.removeEventListener("blur",release);document.removeEventListener("visibilitychange",onVisibility);
         canvas.removeEventListener("webglcontextlost",onContextLost);
         if(gl){for(const buffer of buffers)gl.deleteBuffer(buffer);if(solid)gl.deleteProgram(solid.program);if(particles)gl.deleteProgram(particles.program);}
@@ -168,9 +169,9 @@ export function ParticleDissolveCanvas({geometry,particleCount=4000,className,la
     }catch(cause){
       setFallback(true);setError(cause instanceof Error?cause.message:"Unable to initialize the visual engine");
     }
-  },[geometry,particleCount,enabled,preview]);
+  },[geometry,particleCount,enabled]);
 
-  const togglePreview=()=>setPreview(value=>!value);
+  const togglePreview=()=>{const next=!previewRef.current;previewRef.current=next;setPreview(next);};
   return <section className={className??"cosmos-particle-dissolve"} aria-label={label}>
     <div className="cosmos-particle-stage">
       <canvas ref={canvasRef} aria-label={label} role="img" />
