@@ -1,0 +1,21 @@
+name: COSMOS Auto-Reco Tests
+
+on:
+  push:
+    branches:
+      - integration/cosmos-auto-reco-v1
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  auto-reco:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: node --test tests/auto-reco.test.mjs
