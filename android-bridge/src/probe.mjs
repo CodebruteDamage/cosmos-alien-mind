@@ -3,6 +3,16 @@ import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 
+function safeCommandVersion(command, args = ["--version"]) {
+  try {
+    return execFileSync(command, args, {
+      encoding: "utf8", timeout: 3000, stdio: ["ignore", "pipe", "pipe"]
+    }).trim().split("\n")[0];
+  } catch {
+    return null;
+  }
+}
+
 function safeGitStatus(cwd) {
   if (!fs.existsSync(path.join(cwd, ".git"))) return { available: false, reason: "not-a-git-repository" };
   try {
@@ -32,6 +42,7 @@ export function collectRuntime({ cwd = process.cwd() } = {}) {
   const home = process.env.HOME || os.homedir();
   const prefix = process.env.PREFIX || null;
   const isTermux = Boolean(prefix && prefix.includes("com.termux"));
+  const repository = safeGitStatus(cwd);
   return {
     schema: "cosmos.termux.runtime.v1",
     capturedAt: new Date().toISOString(),
@@ -45,12 +56,12 @@ export function collectRuntime({ cwd = process.cwd() } = {}) {
     },
     runtimes: {
       node: process.version,
-      npm: process.env.npm_config_user_agent?.split(" ")[0] || null,
-      python: process.env.PYTHON_VERSION || null,
-      git: safeGitStatus(cwd).available
+      npm: safeCommandVersion("npm"),
+      python: safeCommandVersion("python"),
+      git: safeCommandVersion("git")
     },
     storage: storageFor(home),
-    repository: safeGitStatus(cwd)
+    repository
   };
 }
 
