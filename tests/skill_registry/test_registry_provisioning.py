@@ -2,7 +2,7 @@ import json
 import pathlib
 import unittest
 
-ROOT = pathlib.Path(__file__).resolve().parents[1]
+ROOT = pathlib.Path(__file__).resolve().parents[2]
 SCHEMA = ROOT / "schemas" / "skill-manifest.v1.schema.json"
 REGISTRY = ROOT / "registry" / "skills" / "registry.seed.v1.json"
 
