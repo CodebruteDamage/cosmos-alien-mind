@@ -23,6 +23,8 @@ jobs:
         run: node --test tests/evidence-engine.test.mjs
       - name: Build guidance regression tests
         run: node --test tests/build-guidance.test.mjs
+      - name: CRAFT triage tests
+        run: node --test tests/craft-engine.test.mjs
       - name: Type check
         run: npx tsc --noEmit
       - name: Lint
