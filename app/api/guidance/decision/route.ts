@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { decideGuidance } from "@/lib/guidance-decision";
-import { runCraftForGuidance } from "@/lib/guidance-craft.mjs";
+import { decideGuidance } from "../../../../lib/guidance-decision.ts";
+import { runCraftForGuidance } from "../../../../lib/guidance-craft.mjs";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -44,15 +44,19 @@ const requestSchema = z.object({
   stopRequested: z.boolean(),
 });
 
+const TRUST_BOUNDARY = "caller_asserted_untrusted";
+
 export async function GET() {
   return NextResponse.json({
     engine: "COSMOS Guidance Decision Engine",
     version: "1.0.0",
     mode: "decision_and_recommendation_only",
     executesActions: false,
+    authorizationGranted: false,
+    trustBoundary: TRUST_BOUNDARY,
     decisions: ["PROCEED", "GATHER_EVIDENCE", "INVOKE_CRAFT", "REQUIRE_APPROVAL", "DEFER", "DENY", "STOP", "NO_ACTION"],
-    craft: "Conditional, verified-blocker-only triage; assessment scores and evidence references must be supplied by the caller.",
-    note: "A decision or CRAFT recommendation is not an execution grant. WARP GATE and the authorized orchestrator must independently enforce permissions.",
+    craft: "Conditional, caller-asserted verified-blocker triage; assessment scores and evidence references are untrusted caller input.",
+    note: "A decision or CRAFT recommendation is not an execution grant. WARP GATE and the authorized orchestrator must independently verify evidence provenance and enforce permissions before any side effect.",
   });
 }
 
@@ -82,6 +86,8 @@ export async function POST(request: NextRequest) {
       ...decision,
       craft,
       executesActions: false,
+      authorizationGranted: false,
+      trustBoundary: TRUST_BOUNDARY,
     });
   } catch {
     return NextResponse.json({ error: "Guidance decision or CRAFT assessment validation failed." }, { status: 400 });
