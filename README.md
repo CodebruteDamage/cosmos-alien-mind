@@ -1,39 +1,57 @@
 # Cosmos Alien Mind
 
-Responsive Next.js MVP foundation for the Cosmos AI personal assistant dashboard.
+Responsive Next.js foundation for the COSMOS assistant dashboard and authenticated Android bridge.
 
 ## Current functionality
 
 - Cosmic dark dashboard, responsive for desktop and mobile.
-- Server-side Neon Postgres client using `DATABASE_URL`.
+- Server-side Neon Postgres client and conversation persistence.
 - Database health endpoint: `GET /api/health`.
-- Conversation persistence endpoints: `GET /api/conversations` and `POST /api/conversations`.
-- Input validation and generic public-facing database errors.
-- No API keys or database credentials are committed.
-
-**Not implemented yet:** live AI/model inference, authentication, per-user data isolation, and production abuse controls. Do not treat this as a production-ready multi-user service until these are implemented.
+- Conversation endpoints: `GET/POST /api/conversations`.
+- Read-only Termux runtime probe and authenticated device heartbeat.
+- Authenticated GPT response endpoint: `POST /api/runtime/respond`.
+- Provider adapter uses the OpenAI Responses API with server-side credentials and `store: false`.
+- Runtime response includes lifecycle evidence and explicitly reports that tool execution and durable runtime persistence are disabled.
 
 ## Local setup
 
 1. Install Node.js 20 or newer.
 2. Install dependencies: `npm install`.
 3. Copy `.env.example` to `.env.local`.
-4. Set `DATABASE_URL` to the Neon connection string in `.env.local`. Keep it server-only; never use a `NEXT_PUBLIC_` prefix.
-5. In the intended Neon database, run the SQL in `db/schema.sql`.
+4. Configure `DATABASE_URL`, `BRIDGE_SHARED_SECRET` (at least 32 characters), `OPENAI_API_KEY`, and optionally `OPENAI_MODEL` in the server environment.
+5. Apply `db/schema.sql` and `db/migrations/20261125_android_bridge_devices.sql` to the intended Neon database.
 6. Start the app: `npm run dev`.
-7. Check `http://localhost:3000/api/health`. A successful result should report `"database":"connected"`.
-8. Submit a prompt on the dashboard and confirm it appears in the memory log.
 
-## Neon schema
+## Termux
 
-The schema creates `conversations` and `messages` tables with UUID keys, constraints, foreign-key cascade deletion, and lookup indexes. Apply it only to the intended project/database.
+Run the local read-only probe:
 
-## Deploy
+```bash
+node android-bridge/src/probe.mjs
+```
 
-Import this repository into Vercel (or connect it to the existing Cosmos deployment only after verifying the intended project). Configure `DATABASE_URL` in the hosting provider's server-side environment settings for each environment, then redeploy. Do not paste secrets into GitHub, source code, screenshots, or chat.
+Send an authenticated heartbeat using the provisioning steps in `android-bridge/PROVISIONING.md`.
 
-## Security notes
+Send a GPT request from Termux:
 
-- This MVP does not yet authenticate users. Do not store sensitive/private conversations or expose the public write endpoint as a production service until authentication, authorization, rate limiting, and abuse protection are added.
-- The health route returns only generic failure status; it does not expose credentials.
-- Real AI inference should be added as a server-side provider adapter with secret keys held only in server environment variables.
+```bash
+node android-bridge/src/assistant.mjs "Summarize the COSMOS runtime status"
+```
+
+The bridge URL must be HTTPS except for localhost development. Keep the bridge token in the Termux environment and the OpenAI key in the server environment. Never commit or paste secrets.
+
+## Validation
+
+```bash
+node --test android-bridge/tests/*.test.mjs lib/runtime/tests/*.test.mjs
+npm run lint
+npm run build
+```
+
+GitHub Actions runs the same checks on the isolated integration branch.
+
+## Explicit limitations
+
+This milestone does not implement Neural Link/RAG retrieval, MCP tool invocation, per-device credential issuance/revocation, rate limiting, signed task dispatch, human approval for state-changing tasks, or durable append-only runtime audit storage. The GPT response endpoint does not execute model-generated tools, shell commands, file changes, or package installs.
+
+The existing conversation endpoints are not authenticated and do not provide per-user data isolation. Do not expose them as a production multi-user service. This branch is an integration prototype, not production certification.
