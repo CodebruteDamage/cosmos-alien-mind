@@ -1,0 +1,1 @@
+export function createClaudeProvider(options?: { apiKey?: string; model?: string; fetchImpl?: typeof fetch; timeoutMs?: number }): (prompt: string, context?: { signal?: AbortSignal }) => Promise<{ text: string; model: string; responseId: string | null }>;
