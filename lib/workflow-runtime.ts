@@ -64,7 +64,7 @@ export type WorkflowRunResult = {
 
 export type WorkflowRuntimeOptions = {
   handlers: Record<string, CapabilityHandler>;
-  authorize: (step: WorkflowStep, workflow: WorkflowDefinition) => PolicyDecision;
+  authorize: (step: WorkflowStep, workflow: WorkflowDefinition) => PolicyDecision | Promise<PolicyDecision>;
   now?: () => number;
   makeIdempotencyKey?: (workflowId: string, stepId: string) => string;
 };
@@ -140,7 +140,7 @@ export async function executeWorkflow(
 
     let decision: PolicyDecision;
     try {
-      decision = options.authorize(step, workflow);
+      decision = await options.authorize(step, workflow);
     } catch {
       const error = "Policy evaluation failed; execution was blocked.";
       emit("step.blocked", step.id, { reason: error });
@@ -202,7 +202,8 @@ export async function executeWorkflow(
         break;
       } catch (error) {
         lastError = error instanceof Error ? error.message : "Unknown step error.";
-        emit("step.attempt_failed", step.id, { attempt: attempt + 1, reason: lastError });\n        if (attempt < retries) retriesUsed += 1;
+        emit("step.attempt_failed", step.id, { attempt: attempt + 1, reason: lastError });
+        if (attempt < retries) retriesUsed += 1;
       } finally {
         if (timeoutHandle) clearTimeout(timeoutHandle);
       }
