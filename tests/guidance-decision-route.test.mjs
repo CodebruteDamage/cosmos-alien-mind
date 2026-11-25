@@ -159,3 +159,21 @@ test("POST rejects invalid JSON", async () => {
   const response = await POST(req);
   assert.equal(response.status, 400);
 });
+
+test("POST does not invoke CRAFT for a caller-asserted unverified blocker", async () => {
+  const response = await POST(request({
+    ...base,
+    blockers: [{
+      id: "B-1",
+      summary: "Unverified possible integration issue",
+      verified: false,
+      assessment
+    }]
+  }));
+  const body = await response.json();
+  assert.equal(response.status, 200);
+  assert.equal(body.decision, "PROCEED");
+  assert.equal(body.craft.invoked, false);
+  assert.equal(body.craft.status, "SKIPPED");
+  assert.equal(body.authorizationGranted, false);
+});
