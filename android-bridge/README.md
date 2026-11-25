@@ -1,44 +1,41 @@
 # COSMOS Android Bridge
 
-Milestone: **COS-ANDROID-003 — Termux Runtime Probe**
+The Android bridge currently supports a read-only runtime probe, authenticated outbound heartbeat, and authenticated text-only GPT requests.
 
-This first implementation establishes a repeatable, read-only runtime inventory on an Android device running Termux.
-
-## Run
-
-From the repository root in Termux:
+## Runtime probe
 
 ```bash
 node android-bridge/src/probe.mjs
 ```
 
-The probe emits JSON using schema `cosmos.termux.runtime.v1`. It reports OS/architecture, Termux prefix detection, Node version, a limited Git status check, and available storage.
+The probe emits schema `cosmos.termux.runtime.v1`. Its subprocess calls are fixed version checks and a fixed Git status command.
+
+## Authenticated heartbeat
+
+See [PROVISIONING.md](./PROVISIONING.md). Heartbeat only registers operational metadata. It does not create a task queue or permit remote execution.
+
+## GPT response from Termux
+
+Configure `COSMOS_BRIDGE_URL` and `COSMOS_BRIDGE_TOKEN` in the Termux session, then run:
+
+```bash
+node android-bridge/src/assistant.mjs "Summarize the COSMOS runtime status"
+```
+
+The client sends a text prompt to `POST /api/runtime/respond` over HTTPS and prints the returned answer and lifecycle evidence. The OpenAI key remains on the server. The request is authenticated using the existing prototype bridge bearer secret.
 
 ## Security boundary
 
-- The probe is local and read-only.
-- It does not start a network listener.
-- It does not accept remote commands.
-- It does not execute arbitrary shell strings.
-- Its only subprocess is a fixed `git status --short --branch` invocation when the current directory is a Git repository.
-- No credentials, environment-variable values other than the Termux prefix, or file contents are uploaded.
-
-## Bridge progression
-
-1. Runtime discovery — this milestone.
-2. Authenticated outbound device registration and heartbeat.
-3. Signed task envelopes with operation allowlists and expiry.
-4. Human approval for any operation that changes files, installs packages, or modifies repositories.
-5. Audited result delivery and replay protection.
-
-The future transport must be outbound-only from the phone, use TLS, bind device identity to a revocable credential, reject arbitrary shell payloads, and keep authorization separate from task planning.
+- No remote shell, arbitrary command execution, remote file access, package installation, or repository mutation.
+- No model tool calls or MCP execution are enabled.
+- The GPT endpoint returns one text response; it does not claim to execute external actions.
+- The current shared bearer secret is a prototype credential, not a per-device identity system.
+- Do not use the current application conversation APIs for sensitive multi-user data.
 
 ## Validation
 
-Run from the repository root:
-
 ```bash
-node --test android-bridge/tests/*.test.mjs
+node --test android-bridge/tests/*.test.mjs lib/runtime/tests/*.test.mjs
+npm run lint
+npm run build
 ```
-
-Runtime output from a developer's phone is not proof that remote dispatch or end-to-end GPT connectivity is operational.
