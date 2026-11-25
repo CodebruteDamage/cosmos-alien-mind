@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server.js";
+import type { NextRequest } from "next/server.js";
 import { z } from "zod";
 import { decideGuidance } from "../../../../lib/guidance-decision.ts";
 import { runCraftForGuidance } from "../../../../lib/guidance-craft.mjs";
