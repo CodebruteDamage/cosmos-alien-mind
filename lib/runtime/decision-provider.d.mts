@@ -1,0 +1,1 @@
+export function createDecisionProvider(provider: (prompt: string, context?: { signal?: AbortSignal; role?: string }) => Promise<{ text: string; model?: string | null }>, role: "cosmos-core" | "alien-mind"): (prompt: string, context?: { signal?: AbortSignal; role?: string }) => Promise<{ text: string; decision: string; model: string | null }>;
