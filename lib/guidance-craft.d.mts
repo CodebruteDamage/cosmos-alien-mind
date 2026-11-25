@@ -18,9 +18,12 @@ export type GuidanceCraftResult = {
   status: "SKIPPED" | "GATHER_EVIDENCE" | "RECOMMENDATION_ONLY";
   reason?: string;
   missingBlockerIds?: readonly string[];
+  missingEvidenceBlockerIds?: readonly string[];
   assessments?: readonly CraftAssessment[];
   requiresHumanApproval?: true;
   executionStarted?: false;
+  authorizationGranted: false;
+  trustBoundary?: "caller_asserted_untrusted";
 };
 
 export declare function runCraftForGuidance(
