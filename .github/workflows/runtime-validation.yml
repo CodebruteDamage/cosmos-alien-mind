@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - "cosmos/unified-runtime-v1"
+      - "feat/dual-core-brain-v1"
   pull_request:
     branches:
       - main
+      - "cosmos/unified-runtime-v1"
 
 jobs:
   validate:
