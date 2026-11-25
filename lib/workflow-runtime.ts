@@ -202,7 +202,8 @@ export async function executeWorkflow(
         break;
       } catch (error) {
         lastError = error instanceof Error ? error.message : "Unknown step error.";
-        emit("step.attempt_failed", step.id, { attempt: attempt + 1, reason: lastError });\n        if (attempt < retries) retriesUsed += 1;
+        emit("step.attempt_failed", step.id, { attempt: attempt + 1, reason: lastError });
+        if (attempt < retries) retriesUsed += 1;
       } finally {
         if (timeoutHandle) clearTimeout(timeoutHandle);
       }
