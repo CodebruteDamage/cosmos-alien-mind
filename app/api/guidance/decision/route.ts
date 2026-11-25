@@ -1,5 +1,3 @@
-import { NextResponse } from "next/server.js";
-import type { NextRequest } from "next/server.js";
 import { z } from "zod";
 import { decideGuidance } from "../../../../lib/guidance-decision.ts";
 import { runCraftForGuidance } from "../../../../lib/guidance-craft.mjs";
@@ -48,7 +46,7 @@ const requestSchema = z.object({
 const TRUST_BOUNDARY = "caller_asserted_untrusted";
 
 export async function GET() {
-  return NextResponse.json({
+  return Response.json({
     engine: "COSMOS Guidance Decision Engine",
     version: "1.0.0",
     mode: "decision_and_recommendation_only",
@@ -61,17 +59,17 @@ export async function GET() {
   });
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   let payload: unknown;
   try {
     payload = await request.json();
   } catch {
-    return NextResponse.json({ error: "Request body must be valid JSON." }, { status: 400 });
+    return Response.json({ error: "Request body must be valid JSON." }, { status: 400 });
   }
 
   const parsed = requestSchema.safeParse(payload);
   if (!parsed.success) {
-    return NextResponse.json({
+    return Response.json({
       error: "Invalid guidance decision input.",
       issues: parsed.error.issues.map((issue) => ({ path: issue.path.join("."), message: issue.message })),
     }, { status: 400 });
@@ -80,7 +78,7 @@ export async function POST(request: NextRequest) {
   try {
     const decision = decideGuidance(parsed.data);
     const craft = runCraftForGuidance(decision, parsed.data.blockers);
-    return NextResponse.json({
+    return Response.json({
       engine: "COSMOS Guidance Decision Engine",
       version: "1.0.0",
       mode: "decision_and_recommendation_only",
@@ -91,6 +89,6 @@ export async function POST(request: NextRequest) {
       trustBoundary: TRUST_BOUNDARY,
     });
   } catch {
-    return NextResponse.json({ error: "Guidance decision or CRAFT assessment validation failed." }, { status: 400 });
+    return Response.json({ error: "Guidance decision or CRAFT assessment validation failed." }, { status: 400 });
   }
 }
