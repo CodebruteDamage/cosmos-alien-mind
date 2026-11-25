@@ -1,6 +1,5 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { NextRequest } from "next/server";
 import { GET, POST } from "../app/api/guidance/decision/route.ts";
 
 const base = {
@@ -34,7 +33,7 @@ const assessment = {
 };
 
 function request(payload) {
-  return new NextRequest("http://localhost/api/guidance/decision", {
+  return new Request("http://localhost/api/guidance/decision", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(payload)
@@ -152,7 +151,7 @@ test("POST preserves STOP and DENY precedence without invoking CRAFT", async (t)
 });
 
 test("POST rejects invalid JSON", async () => {
-  const req = new NextRequest("http://localhost/api/guidance/decision", {
+  const req = new Request("http://localhost/api/guidance/decision", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: "{"
