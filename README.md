@@ -9,7 +9,7 @@ Responsive Next.js foundation for the COSMOS assistant dashboard and authenticat
 - Database health endpoint: `GET /api/health`.
 - Conversation endpoints: `GET/POST /api/conversations`.
 - Read-only Termux runtime probe and authenticated device heartbeat.
-- Authenticated GPT response endpoint: `POST /api/runtime/respond`.
+- Authenticated GPT response endpoint: `POST /api/runtime/respond`.\n- Authenticated dual-core endpoint: `POST /api/runtime/dual-core/respond` (GPT + Claude).
 - Provider adapter uses the OpenAI Responses API with server-side credentials and `store: false`.
 - Runtime response includes lifecycle evidence and explicitly reports that tool execution and durable runtime persistence are disabled.
 
@@ -52,6 +52,6 @@ GitHub Actions runs the same checks on the isolated integration branch.
 
 ## Explicit limitations
 
-This milestone does not implement Neural Link/RAG retrieval, MCP tool invocation, per-device credential issuance/revocation, rate limiting, signed task dispatch, human approval for state-changing tasks, or durable append-only runtime audit storage. The GPT response endpoint does not execute model-generated tools, shell commands, file changes, or package installs.
+This milestone does not implement Neural Link/RAG retrieval, MCP tool invocation, per-device credential issuance/revocation, rate limiting, signed task dispatch, human approval for state-changing tasks, or durable append-only runtime audit storage. The GPT and dual-core response endpoints do not execute model-generated tools, shell commands, file changes, or package installs. The dual-core endpoint requires both `OPENAI_API_KEY` and `ANTHROPIC_API_KEY`; disagreement or incomplete structured output returns `needs_review`.
 
 The existing conversation endpoints are not authenticated and do not provide per-user data isolation. Do not expose them as a production multi-user service. This branch is an integration prototype, not production certification.
