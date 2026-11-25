@@ -1,7 +1,7 @@
 # COSMOS Dual-Brain Integration v1.0
 
 **Status:** Contract and lifecycle baseline only — not operational runtime integration  
-**Owner:** Franz, COSMOS Manager  
+**Human owner:** Franz — strategic direction and release approval  
 **Repository:** `CodebruteDamage/cosmos-alien-mind`  
 **Branch:** `integration/dual-brain-lifecycle-v1`
 
@@ -17,12 +17,15 @@ The default branch currently contains a Next.js 15 / React 19 dashboard MVP, a N
 
 The current dashboard states that live AI/model inference is not implemented. The README also states that authentication, per-user data isolation, and production abuse controls are not implemented. The conversation POST route stores a user message; it does not call an AI provider or produce an assistant response.
 
-Consequently, live dual-brain operation is blocked until provider integration and security prerequisites are implemented and verified. The existing unauthenticated conversation endpoint must not be used as a production dual-brain execution boundary.
+A separate Alien Mind reasoning runtime was not found in the inspected repository tree. This is a repository-scope finding; a separate repository, local workspace, or uninspected branch may still contain it. See `docs/audits/alien-mind-brain-reaudit-v1.md`.
+
+Consequently, live dual-brain operation is blocked until the actual Alien Mind source is located and audited, provider integration exists, and security prerequisites are implemented and verified. The existing unauthenticated conversation endpoint must not be used as a production dual-brain execution boundary.
 
 ## 3. Logical responsibilities
 
 | Component | Responsibility | Must not do |
 |---|---|---|
+| COSMOS | Complete governed system and product identity | Be confused with either individual reasoning role |
 | COSMOS Core | Primary request interpretation, task coordination, final synthesis and response ownership | Bypass policy or independently grant tool permissions |
 | Alien Mind | Independent analysis, alternative reasoning, critique and evidence-gap identification | Become a second system authority or execute tools directly |
 | Dual-Brain Coordinator | Correlate one request across both roles, apply timeouts, collect results and record disagreements | Become a new general-purpose orchestration layer |
@@ -30,9 +33,9 @@ Consequently, live dual-brain operation is blocked until provider integration an
 | WARP GATE | Independently authorize every protected tool/action through a verified enforcement boundary | Delegate its authority to either brain |
 | Inspector | Independently validate integration behavior, evidence and test outcomes | Modify production code or approve its own findings |
 | Runtime Supervisor | Observe availability, latency, errors, resource use and recovery | Grant permissions |
-| Franz — COSMOS Manager | Approve strategic scope and production promotion | Bypass runtime security controls |
+| Human owner: Franz | Set strategic direction and approve release promotion | Be represented as a model, runtime process, credential, or bypass authority |
 
-The coordinator is a narrow adapter/workflow inside the existing runtime, not a new manager or standalone engine.
+The coordinator is a narrow adapter/workflow inside the existing runtime, not a new manager or standalone engine. “Alien Mind” names the second analytical role; it is not a separate governance hierarchy or synonym for the entire COSMOS system.
 
 ## 4. Request lifecycle
 
@@ -102,7 +105,7 @@ These are release blockers, not optional enhancements:
 
 | Gate | Work | Acceptance evidence |
 |---|---|---|
-| DB-01 Discovery baseline | Inventory both brain implementations, runtime, providers, Neural Link, WARP GATE and Inspector | File/branch inventory with verified paths and owners |
+| DB-01 Discovery baseline | Locate and inventory both brain implementations, runtime, providers, Neural Link, WARP GATE and Inspector | Verified file/branch inventory with paths and owners |
 | DB-02 Contract | Adopt shared request/response schemas and role boundaries | Schema validation tests; mismatched role/request rejection |
 | DB-03 Security boundary | Implement authentication, tenant isolation and secret handling | Positive and negative authorization tests; no cross-tenant reads |
 | DB-04 Provider adapters | Connect each brain through server-only provider adapters | Independent provider smoke tests; secrets absent from logs |
@@ -128,9 +131,10 @@ A gate cannot be marked passed based on documentation alone. Each pass requires 
 
 - Repository target confirmed: `cosmos-alien-mind`.
 - Feature branch created from `main`.
-- Existing MVP inspected; no source files were changed before this document.
+- Existing MVP inspected; no application source files were changed.
 - Dual-brain contract and lifecycle baseline recorded in this file.
+- Alien Mind re-audit recorded separately; the actual Alien Mind implementation remains unlocated in this repository.
 - Live model inference, authenticated tenant isolation, provider adapters, WARP GATE production integration and end-to-end tests remain unimplemented/unverified.
 - No deployment, merge or production configuration changes were performed.
 
-**Next milestone:** implement DB-02 contract schemas and tests only after confirming the chosen provider strategy and the authentication/tenant boundary. Do not wire live dual-brain calls ahead of DB-03 security controls.
+**Next milestone:** locate the actual Alien Mind implementation and complete DB-01 before writing adapters or schemas. Then implement DB-02 and DB-03 with executable tests. Do not wire live dual-brain calls ahead of the security boundary.
