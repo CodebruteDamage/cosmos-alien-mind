@@ -5,6 +5,7 @@ on:
     branches:
       - "cosmos/unified-runtime-v1"
       - "feat/dual-core-brain-v1"
+      - "feat/cosmos-command-center-analytics-v1"
   pull_request:
     branches:
       - main
@@ -19,10 +20,12 @@ jobs:
         with:
           node-version: 24
       - run: npm install
-      - run: node --test android-bridge/tests/*.test.mjs lib/runtime/tests/*.test.mjs
+      - run: npm test
       - run: npm run lint
       - run: npm run build
         env:
           DATABASE_URL: postgresql://ci:ci@localhost:5432/cosmos
           OPENAI_API_KEY: ci-placeholder-not-used-at-build
+          ANTHROPIC_API_KEY: ci-placeholder-not-used-at-build
+          COSMOS_SWARM_TOKEN: ci-placeholder-secret-at-least-32-characters
           BRIDGE_SHARED_SECRET: ci-placeholder-secret-at-least-32-characters
