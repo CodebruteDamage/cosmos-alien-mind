@@ -1,6 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { getSql } from "@/lib/db";
+import { buildAnalyticsQuery } from "@/lib/analytics-contract.mjs";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest) {
   const limit = rawLimit === null ? DEFAULT_LIMIT : Number(rawLimit);
   const rawWindow = request.nextUrl.searchParams.get("window");
   const windowMinutes = rawWindow === null ? 60 : Number(rawWindow);
-  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_LIMIT || !Number.isInteger(windowMinutes) || windowMinutes < 5 || windowMinutes > 1440) return NextResponse.json({ ok: false, error: "Invalid limit or time window." }, { status: 400 });
+  try { buildAnalyticsQuery({ windowMinutes, limit }); } catch { return NextResponse.json({ ok: false, error: "Invalid limit or time window." }, { status: 400 }); }
   try {
     const sql = getSql();
     const rows = await sql`
