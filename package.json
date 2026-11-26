@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "test": "node --experimental-strip-types --test tests/swarm-contract.test.ts lib/runtime/tests/*.test.mjs android-bridge/tests/*.test.mjs"
+    "test": "node --experimental-strip-types --test tests/*.test.mjs lib/runtime/tests/*.test.mjs android-bridge/tests/*.test.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
