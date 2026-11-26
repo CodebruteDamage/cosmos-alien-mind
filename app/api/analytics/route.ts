@@ -1,11 +1,10 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { getSql } from "@/lib/db";
-import { buildAnalyticsQuery } from "@/lib/analytics-contract.mjs";
+import { buildAnalyticsQuery } from "@/lib/analytics-contract";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-const MAX_LIMIT = 500;
 const DEFAULT_LIMIT = 200;
 
 function authorize(request: NextRequest): NextResponse | null {
