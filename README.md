@@ -55,3 +55,27 @@ GitHub Actions runs the same checks on the isolated integration branch.
 This milestone does not implement Neural Link/RAG retrieval, MCP tool invocation, per-device credential issuance/revocation, rate limiting, signed task dispatch, human approval for state-changing tasks, or durable append-only runtime audit storage. The GPT and dual-core response endpoints do not execute model-generated tools, shell commands, file changes, or package installs. The dual-core endpoint requires both `OPENAI_API_KEY` and `ANTHROPIC_API_KEY`; disagreement or incomplete structured output returns `needs_review`.
 
 The existing conversation endpoints are not authenticated and do not provide per-user data isolation. Do not expose them as a production multi-user service. This branch is an integration prototype, not production certification.
+
+
+## COSMOS real-time visual analytics
+
+The command-center analytics view reuses the authenticated event store from the Live Data Swarm implementation. It does not create a second telemetry ingestion API or duplicate event tables.
+
+### Configuration
+
+- Configure `COSMOS_SWARM_TOKEN` as a server-only secret of at least 32 characters, shared only with trusted node agents and the authenticated dashboard operator.
+- Configure `DATABASE_URL` server-side.
+- Review and apply the additive `db/swarm-schema.sql` migration from the `feat/live-data-swarm` implementation before connecting trusted nodes.
+- Connect through the dashboard's operator-token form. The token is held in page memory and is not written to local storage. Analytics requests are sent with the existing bearer token; no public browser endpoint is added.
+
+### Analytics
+
+- `GET /api/analytics?window=60&limit=200` requires the same bearer token as `/api/swarm`.
+- Returns event count, distinct nodes represented by recent events, error/failure event counts, policy/security event counts, event-type distribution, node workload distribution, minute-bucket timeline, and the latest event sequence/time.
+- Refreshes at a bounded ten-second interval while connected. Every query is bounded to 500 events and a 5-minute to 24-hour window.
+- Classification of error/security activity is based on event-type naming conventions. It is an observability signal, not a security verdict.
+- No sample telemetry is presented as live data. Local simulation and real swarm connection remain explicitly distinct.
+
+### Validation limits
+
+Unit tests and a successful build do not prove a live database migration, node-agent connectivity, provider inference, or production multi-user security. The conversation endpoints remain unauthenticated as described above. Do not deploy this as a public multi-user system until authentication, per-user isolation, rate limiting, and abuse controls are implemented.
