@@ -5,7 +5,6 @@ on:
     branches:
       - cosmaxx/runtime-adapter-v1
       - cosmaxx/phase-01-hardening-v1
-      - cosmos/automatic-task-ownership-v1
     paths:
       - 'lib/cosmaxx/**'
       - 'lib/orchestration/**'
@@ -17,6 +16,7 @@ on:
   push:
     branches:
       - cosmaxx/phase-01-hardening-v1
+      - cosmos/automatic-task-ownership-v1
 
 permissions:
   contents: read
