@@ -1,8 +1,9 @@
 "use client";
 
-import { createAuthClient } from "better-auth/react";
-import { organizationClient } from "better-auth/client/plugins";
+import { createAuthClient } from "@neondatabase/auth/next";
 
-export const authClient = createAuthClient({
-  plugins: [organizationClient()],
-});
+/**
+ * Browser auth client. The Next.js adapter proxies auth requests through
+ * /api/auth, so the upstream Neon Auth URL stays server-side.
+ */
+export const authClient = createAuthClient();
