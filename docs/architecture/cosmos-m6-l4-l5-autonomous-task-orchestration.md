@@ -124,3 +124,9 @@ The automatic ownership step is governed by the detailed **Ownership Scope Contr
 - lifecycle gates and runtime acceptance criteria.
 
 A Task Owner assignment never grants permissions. A task cannot enter OWNED without a complete contract and eligible owner. A task cannot execute protected actions without independent WARP GATE authorization. Runtime implementation and certification remain pending.
+
+## 12. Unified flagship build refinement
+
+The complete cross-branch L4/L5 composition, BT-01 through BT-04 build profiles, responsibility map, M00–M11 milestone sequence, PR reconciliation plan, provider decision boundary, 12 GAP naming correction, seven-domain qualification matrix, and release gates are defined in [COSMOS Unified L4/L5 Flagship Build Blueprint](./cosmos-unified-l4-l5-flagship-build-blueprint.md).
+
+This blueprint is the integration architecture reference. It does not merge the separate draft PRs, activate runtime services, or certify L4/L5. M00 baseline reconciliation is the next execution package.
