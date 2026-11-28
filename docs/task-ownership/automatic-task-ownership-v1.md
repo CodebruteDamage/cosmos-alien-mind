@@ -1,60 +1,91 @@
-# Automatic Task Ownership Policy v1.0
+# Automatic Task Ownership Policy v1.1 — Flagship L4/L5
 
 ## Purpose
 
-Assign a responsible specialist to each task before execution while preserving the separation between task ownership, orchestration, execution, blocker resolution, validation, evidence, and governance.
+Assign one accountable Task Provider using explicit objective–subject–capability alignment. Preserve the separation between task ownership, orchestration, provider routing, execution, blocker resolution, validation, evidence, and governance.
 
-## Ownership contract
+## Mandatory intake contract
 
-- **Task owner:** the specialist responsible for the task outcome, selected by task category.
-- **Orchestrator:** ORCH coordinates the task lifecycle and remains accountable for chain coordination.
-- **Provider router:** TPO selects and routes the task to providers.
-- **Execution provider:** an explicitly selected runtime that satisfies every required capability.
-- **Blocker provider:** CRAFT diagnoses and resolves verified blockers.
-- **Validation provider:** 12 GAP CYCLE checks lifecycle acceptance.
-- **Governance provider:** WARP GATE independently authorizes side effects.
-- **Evidence provider:** CME / Evidence Engine records provenance and results.
+Every assignment must supply:
 
-## Default task-owner routing
+- **Objective:** a concrete, outcome-oriented statement of what must be achieved.
+- **Subject:** one registered COSMOS subsystem/domain that the objective directly affects.
+- **Alignment rationale:** a concise explanation of why that subject is the correct ownership domain for the objective.
+- **Category:** secondary classification for reporting and compatibility; it cannot override subject ownership.
+- **Required capabilities:** the capabilities needed by the execution provider.
+- **Acceptance criteria:** observable conditions that define completion.
 
-| Category | Task owner |
+Missing objective, subject, rationale, capabilities, or acceptance criteria blocks assignment. Unknown subjects remain unassigned; the policy must not silently fall back to a generic category owner.
+
+## Objective–subject ownership registry
+
+| Subject | Task Provider |
 |---|---|
 | architecture | SHAPE |
-| optimization | COSMAXX |
-| runtime_hardening | COSMAXX |
-| development | DEVOPS |
-| operations | DEVOPS |
+| governance | SHAPE |
+| guidance | SHAPE |
+| cosmaxx | COSMAXX |
+| craft | CRAFT |
+| devops | DEVOPS |
 | security | DEFENDER |
 | threat_protection | FORCEFIELD |
 | workflow_integration | HOOKS |
-| blocker | CRAFT |
+| orchestration | ORCH |
+| evidence | CME_EVIDENCE_ENGINE |
 | validation | 12_GAP_CYCLE |
 | discovery | DISCOVERY |
 | general | ORCH |
 
-ORCH and TPO are not interchangeable: ORCH coordinates the chain; TPO performs provider selection and routing. The category specialist owns the task outcome.
+Subject ownership is authoritative. Category routing is retained as secondary metadata and must not override a more precise subject assignment. The objective and alignment rationale are caller-supplied declarations; they are not proof that the caller is truthful. This policy verifies that the objective and rationale are non-empty and that the subject is registered; it does not semantically prove that the rationale matches the objective. A trusted host or a separately validated alignment component must perform that check before consequential execution.
 
-## Fail-closed execution selection
+## Unified provider responsibility contract
 
-The policy selects an execution provider only when:
-1. The provider candidate has a non-empty identifier.
-2. Its capability list is valid.
-3. It satisfies every required capability.
-4. Selection is unambiguous, or the caller supplies a preferred provider that passes the same capability check.
+- **Task Provider:** one accountable specialist that owns the objective and outcome.
+- **ORCH:** coordinates lifecycle, dependencies, and task-chain state.
+- **TPO:** selects and routes providers; it does not replace task ownership.
+- **Execution Provider:** verified runtime that satisfies every required capability.
+- **Blocker Provider:** CRAFT diagnoses and resolves blockers.
+- **Validation Provider:** 12 GAP CYCLE checks lifecycle acceptance.
+- **Governance Authority:** WARP GATE independently authorizes side effects.
+- **Evidence Provider:** CME / Evidence Engine records provenance and results.
 
-Missing candidates, missing capabilities, ambiguous selection, invalid acceptance criteria, or an invalid category block assignment.
+These roles are distinct. The Task Provider does not grant execution authority. Provider candidates supplied to this policy are not a trusted registry.
+
+## L4 — Deterministic governance
+
+L4 requires explicit objective–subject alignment, one accountable Task Provider, capability-complete and unambiguous execution-provider selection, role separation, fail-closed behavior, evidence capture, and independently enforced authorization.
+
+- Read-only work may be dispatch-ready only after a valid execution provider is selected.
+- Side-effect work requires an exact WARP GATE authorization and remains non-dispatchable at this policy layer.
+- Consequential work additionally requires explicit human approval where policy requires it.
+- DENY, REQUIRE_APPROVAL, BLOCKED, malformed responses, missing grants, mismatched bindings, failed verification, replay, timeout, or unavailable governance services must block execution.
+
+## L5 — Adaptive ownership within L4
+
+L5 may evaluate validated outcome evidence, provider capability evidence, availability, dependencies, and historical performance to recommend a better-aligned owner or execution provider.
+
+Reassignment must be explicit and auditable. Preserve the previous owner, proposed owner, objective, subject, rationale, evidence references, timestamp, and approval state. Consequential in-flight reassignment requires the applicable human approval and a fresh WARP GATE authorization for the changed execution binding.
+
+L5 must never self-grant permissions, treat confidence as authorization, bypass WARP GATE, silently reassign consequential work, or turn a recommendation into execution.
+
+## Failure states
+
+| Condition | Required state |
+|---|---|
+| Missing objective or alignment rationale | ALIGNMENT_INSUFFICIENT |
+| Unknown subject | UNASSIGNED |
+| Missing specialist capability | SPECIALIST_DISCOVERY_REQUIRED |
+| No eligible execution provider | EXECUTION_BLOCKED |
+| Ambiguous execution provider | PROVIDER_SELECTION_AMBIGUOUS |
+| WARP GATE denial or failure | DENIED / BLOCKED |
+| Required human approval absent | AWAITING_APPROVAL |
+| Acceptance criteria fail | REWORK_REQUIRED |
+| Better owner identified | REASSIGNMENT_PROPOSED |
 
 ## Authorization boundary
 
-- Read-only assignments may be marked dispatch-ready once a valid execution provider is selected.
-- Side-effect assignments require WARP GATE authorization and remain non-dispatchable at this policy layer.
-- Consequential assignments additionally require explicit human approval.
-- This module does not contact WARP GATE, create grants, execute tasks, merge pull requests, provision resources, or deploy software. An external governed runtime must verify authorization before execution.
-
-## Integration status
-
-This is a deterministic TypeScript assignment policy exported from the COSMAXX library. It is not yet a persistent task queue, autonomous scheduler, provider registry, or production orchestration service. Provider candidates and capabilities must be supplied by a trusted caller; they are not self-attested by this module.
+This module assigns responsibility only. It does not contact WARP GATE, create grants, authenticate identities, maintain a durable task queue, execute tasks, merge pull requests, provision infrastructure, or deploy software. The host must enforce identity, trusted provider registration, authorization, durable audit, and replay protection.
 
 ## Validation
 
-Covered by automated tests for specialist routing, ORCH/TPO separation, ambiguous provider selection, capability checks, preferred-provider validation, side-effect authorization boundaries, human approval requirements, and missing acceptance criteria.
+Tests cover subject-first ownership, category conflict, missing objective, missing alignment rationale, unknown subjects, provider ambiguity, capability checks, approval boundaries, and acceptance criteria.

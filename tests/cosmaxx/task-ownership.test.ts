@@ -8,6 +8,9 @@ import {
 function request(overrides: Partial<TaskOwnershipRequest> = {}): TaskOwnershipRequest {
   return {
     taskId: "task-001",
+    objective: "Harden the COSMAXX runtime adapter",
+    subject: "cosmaxx",
+    alignmentRationale: "The objective changes the COSMAXX runtime adapter and its hardening controls.",
     description: "Harden the runtime adapter",
     category: "runtime_hardening",
     risk: "read_only",
@@ -20,11 +23,14 @@ function request(overrides: Partial<TaskOwnershipRequest> = {}): TaskOwnershipRe
   };
 }
 
-test("assigns the specialist task owner and keeps ORCH/TPO roles distinct", () => {
+test("assigns by subject and keeps ORCH/TPO roles distinct", () => {
   const assignment = assignTaskOwnership(request());
 
   assert.equal(assignment.status, "assigned");
   assert.equal(assignment.taskOwner, "COSMAXX");
+  assert.equal(assignment.ownerSelectionBasis, "subject");
+  assert.equal(assignment.objective, "Harden the COSMAXX runtime adapter");
+  assert.equal(assignment.subject, "cosmaxx");
   assert.equal(assignment.orchestrator, "ORCH");
   assert.equal(assignment.providerRouter, "TPO");
   assert.equal(assignment.executionProvider, "github-actions");
@@ -33,6 +39,45 @@ test("assigns the specialist task owner and keeps ORCH/TPO roles distinct", () =
   assert.equal(assignment.governanceProvider, "WARP_GATE");
   assert.equal(assignment.evidenceProvider, "CME_EVIDENCE_ENGINE");
   assert.equal(assignment.dispatchReady, true);
+});
+
+test("subject ownership overrides a conflicting generic category", () => {
+  const assignment = assignTaskOwnership(request({
+    objective: "Refine the architecture integration contract",
+    subject: "architecture",
+    alignmentRationale: "The deliverable changes cross-engine architecture and integration boundaries.",
+    category: "optimization",
+  }));
+
+  assert.equal(assignment.status, "assigned");
+  assert.equal(assignment.taskOwner, "SHAPE");
+  assert.equal(assignment.ownerSelectionBasis, "subject");
+});
+
+test("blocks when objective is missing", () => {
+  const assignment = assignTaskOwnership(request({ objective: " " }));
+
+  assert.equal(assignment.status, "blocked");
+  assert.equal(assignment.dispatchReady, false);
+  assert.match(assignment.blockers.join(" "), /objective/i);
+});
+
+test("blocks when objective-to-subject rationale is missing", () => {
+  const assignment = assignTaskOwnership(request({ alignmentRationale: "" }));
+
+  assert.equal(assignment.status, "blocked");
+  assert.match(assignment.blockers.join(" "), /alignment rationale/i);
+});
+
+test("blocks unknown subjects instead of falling back to category ownership", () => {
+  const assignment = assignTaskOwnership(request({
+    subject: "unknown-subsystem" as TaskOwnershipRequest["subject"],
+    category: "runtime_hardening",
+  }));
+
+  assert.equal(assignment.status, "blocked");
+  assert.equal(assignment.taskOwner, "ORCH");
+  assert.match(assignment.blockers.join(" "), /subject is not registered/i);
 });
 
 test("blocks when more than one execution provider is eligible", () => {
