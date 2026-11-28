@@ -101,7 +101,7 @@ export class CosmaxxRuntimeAdapter {
     }
   }
   async evaluate(request: OptimizationRequest): Promise<OptimizationResult> {
-    const raw = isRecord(request) ? request : {};
+    const raw: RecordValue = isRecord(request) ? request : {};
     const base = {
       contract_version: COSMAXX_CONTRACT_VERSION,
       request_id: typeof raw.request_id === "string" ? raw.request_id : "",
