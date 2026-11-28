@@ -1,4 +1,4 @@
-import type { PolicyDecision } from "./contracts";
+export type WarpGateWarpGatePolicyDecision = { allowed: boolean; reason: string };
 
 export type GovernedAction = "read" | "write" | "delete" | "external";
 export type GovernedRisk = "low" | "moderate" | "high" | "critical";
@@ -101,7 +101,7 @@ function claimsMatch(
   return true;
 }
 
-function denied(reason: string): PolicyDecision {
+function denied(reason: string): WarpGatePolicyDecision {
   return { allowed: false, reason };
 }
 
@@ -136,7 +136,7 @@ export async function authorizeWarpGateExecution(
   gate: WarpGatePort,
   binding: WarpGateExecutionBinding,
   options: WarpGateContractOptions = {},
-): Promise<PolicyDecision> {
+): Promise<WarpGatePolicyDecision> {
   const bindingErrors = validateWarpGateBinding(binding);
   if (bindingErrors.length) return denied("Invalid execution binding; authorization was not requested.");
 
