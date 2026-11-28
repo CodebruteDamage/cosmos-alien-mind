@@ -9,7 +9,7 @@
     "types": [
       "node"
     ],
-    "outDir": ".test-build",
+    "outDir": "/tmp/cosmaxx-test-build",
     "rootDir": "."
   },
   "include": [
