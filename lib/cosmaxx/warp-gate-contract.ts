@@ -1,4 +1,4 @@
-export type WarpGateWarpGatePolicyDecision = { allowed: boolean; reason: string };
+export type WarpGatePolicyDecision = { allowed: boolean; reason: string };
 
 export type GovernedAction = "read" | "write" | "delete" | "external";
 export type GovernedRisk = "low" | "moderate" | "high" | "critical";
@@ -69,6 +69,8 @@ export function validateWarpGateBinding(value: unknown): string[] {
   if (!RISKS.includes(String(value.risk))) errors.push("risk is invalid.");
   if (typeof value.requiresHumanApproval !== "boolean") {
     errors.push("requiresHumanApproval must be boolean.");
+  } else if ((value.risk === "high" || value.risk === "critical") && value.requiresHumanApproval !== true) {
+    errors.push("High and critical risk require explicit human approval.");
   }
   if (typeof value.parametersDigest !== "string" || !SHA256_PATTERN.test(value.parametersDigest)) {
     errors.push("parametersDigest must be a sha256 digest.");
@@ -144,9 +146,10 @@ export async function authorizeWarpGateExecution(
   const verificationTimeoutMs = options.verificationTimeoutMs ?? 5_000;
   const maxClockSkewMs = options.maxClockSkewMs ?? 30_000;
   const now = options.now ?? Date.now;
-  if (![authorizationTimeoutMs, verificationTimeoutMs, maxClockSkewMs].every(Number.isFinite) ||
+  const currentTime = now();
+  if (![authorizationTimeoutMs, verificationTimeoutMs, maxClockSkewMs, currentTime].every(Number.isFinite) ||
       authorizationTimeoutMs <= 0 || verificationTimeoutMs <= 0 || maxClockSkewMs < 0) {
-    return denied("Invalid WARP GATE timeout configuration.");
+    return denied("Invalid WARP GATE timeout or clock configuration.");
   }
 
   let authorization: unknown;
@@ -187,7 +190,7 @@ export async function authorizeWarpGateExecution(
   }
 
   if (!isRecord(verification) || verification.valid !== true ||
-      !claimsMatch(verification.verifiedClaims, binding, now(), maxClockSkewMs)) {
+      !claimsMatch(verification.verifiedClaims, binding, currentTime, maxClockSkewMs)) {
     return denied("WARP GATE grant was invalid, expired, mismatched, or not atomically consumed.");
   }
 
