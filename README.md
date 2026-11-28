@@ -1,39 +1,38 @@
 # Cosmos Alien Mind
 
-Responsive Next.js MVP foundation for the Cosmos AI personal assistant dashboard.
+Responsive Next.js MVP foundation for the COSMOS assistant workspace.
 
-## Current functionality
+## Runtime security status
 
-- Cosmic dark dashboard, responsive for desktop and mobile.
-- Server-side Neon Postgres client using `DATABASE_URL`.
-- Database health endpoint: `GET /api/health`.
-- Conversation persistence endpoints: `GET /api/conversations` and `POST /api/conversations`.
-- Input validation and generic public-facing database errors.
-- No API keys or database credentials are committed.
+The feature branch contains a Better Auth identity adapter and tenant-scoped conversation handlers. Authentication requires server-side `DATABASE_URL`, `BETTER_AUTH_SECRET`, and `BETTER_AUTH_URL`. User and tenant identity are derived from a verified Better Auth session and active organization membership; caller-supplied identity fields are not trusted.
 
-**Not implemented yet:** live AI/model inference, authentication, per-user data isolation, and production abuse controls. Do not treat this as a production-ready multi-user service until these are implemented.
+**WARP GATE is not yet connected.** Protected conversation operations therefore fail closed with HTTP 503 until a verified WARP GATE adapter is integrated. Authentication alone does not grant permissions.
 
 ## Local setup
 
 1. Install Node.js 20 or newer.
-2. Install dependencies: `npm install`.
+2. Run `npm install`.
 3. Copy `.env.example` to `.env.local`.
-4. Set `DATABASE_URL` to the Neon connection string in `.env.local`. Keep it server-only; never use a `NEXT_PUBLIC_` prefix.
-5. In the intended Neon database, run the SQL in `db/schema.sql`.
-6. Start the app: `npm run dev`.
-7. Check `http://localhost:3000/api/health`. A successful result should report `"database":"connected"`.
-8. Submit a prompt on the dashboard and confirm it appears in the memory log.
+4. Configure the server-only environment values. Never commit secrets.
+5. Generate the Better Auth schema with `npm run auth:generate`, review the generated SQL, and apply it only to the intended Neon database with explicit operator approval.
+6. Review and apply `db/migrations/20261128_001_conversation_tenant_isolation.sql` to an existing database. For a new database, use the tenant-aware `db/schema.sql`.
+7. Run `npm run lint`, `npm run typecheck`, and `npm run test:cosmos`.
+8. Start locally with `npm run dev`.
 
-## Neon schema
+Legacy conversations with unknown ownership remain inaccessible. Do not assign legacy rows to users without a verified, auditable mapping.
 
-The schema creates `conversations` and `messages` tables with UUID keys, constraints, foreign-key cascade deletion, and lookup indexes. Apply it only to the intended project/database.
+## Security boundaries
 
-## Deploy
+- Better Auth verifies sessions; active organization membership is rechecked on each request.
+- Tenant and owner values are taken only from the verified principal.
+- Conversation reads are scoped by tenant and subject.
+- Conversation creation requires a trusted Origin, bounded JSON body, and one-statement atomic insert.
+- WARP GATE remains the sole authorization authority. No local allow fallback exists.
+- No production migration, secret provisioning, deployment, or main-branch merge is authorized by this feature work.
+- Email verification/recovery delivery, rate limiting, operational abuse controls, WARP GATE runtime integration, audit persistence, and production security review remain outstanding.
 
-Import this repository into Vercel (or connect it to the existing Cosmos deployment only after verifying the intended project). Configure `DATABASE_URL` in the hosting provider's server-side environment settings for each environment, then redeploy. Do not paste secrets into GitHub, source code, screenshots, or chat.
+## Current functionality
 
-## Security notes
-
-- This MVP does not yet authenticate users. Do not store sensitive/private conversations or expose the public write endpoint as a production service until authentication, authorization, rate limiting, and abuse protection are added.
-- The health route returns only generic failure status; it does not expose credentials.
-- Real AI inference should be added as a server-side provider adapter with secret keys held only in server environment variables.
+- Cosmic dashboard and server-side Neon connectivity probe.
+- Tenant-aware conversation persistence code, gated by authentication and WARP GATE.
+- No live AI/model inference.
