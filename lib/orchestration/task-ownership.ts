@@ -18,7 +18,7 @@ export const TASK_OWNER_BY_CATEGORY = {
 export const TASK_OWNER_BY_SUBJECT = {
   architecture: "SHAPE",
   governance: "SHAPE",
-  guidance: "ORCH",
+  guidance: "SHAPE",
   cosmaxx: "COSMAXX",
   craft: "CRAFT",
   devops: "DEVOPS",
@@ -139,7 +139,7 @@ export function assignTaskOwnership(
   if (!Object.prototype.hasOwnProperty.call(TASK_OWNER_BY_CATEGORY, request.category)) {
     blockers.push("The task category is not registered.");
   }
-  if (![ "read_only", "side_effect", "consequential" ].includes(request.risk)) {
+  if (!["read_only", "side_effect", "consequential"].includes(request.risk)) {
     blockers.push("A valid task risk classification is required.");
   }
   if (!isUniqueStringArray(request.requiredCapabilities) || request.requiredCapabilities.length === 0) {
