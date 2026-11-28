@@ -23,7 +23,7 @@ Missing objective, subject, rationale, capabilities, or acceptance criteria bloc
 |---|---|
 | architecture | SHAPE |
 | governance | SHAPE |
-| guidance | ORCH |
+| guidance | SHAPE |
 | cosmaxx | COSMAXX |
 | craft | CRAFT |
 | devops | DEVOPS |
@@ -36,7 +36,7 @@ Missing objective, subject, rationale, capabilities, or acceptance criteria bloc
 | discovery | DISCOVERY |
 | general | ORCH |
 
-Subject ownership is authoritative. Category routing is retained as secondary metadata and must not override a more precise subject assignment. The objective and alignment rationale are caller-supplied declarations; they are not proof that the caller is truthful. A trusted host must authenticate the actor and validate provider/subject claims before consequential execution.
+Subject ownership is authoritative. Category routing is retained as secondary metadata and must not override a more precise subject assignment. The objective and alignment rationale are caller-supplied declarations; they are not proof that the caller is truthful. This policy verifies that the objective and rationale are non-empty and that the subject is registered; it does not semantically prove that the rationale matches the objective. A trusted host or a separately validated alignment component must perform that check before consequential execution.
 
 ## Unified provider responsibility contract
 
