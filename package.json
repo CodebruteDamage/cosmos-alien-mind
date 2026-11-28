@@ -8,13 +8,12 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test:cosmos": "tsx --test test/cosmos/*.test.ts",
-    "auth:generate": "npx auth@latest generate --config ./lib/auth.ts --output db/migrations/20261121_002_better_auth.sql --yes"
+    "test:cosmos": "tsx --test test/cosmos/*.test.ts"
   },
   "dependencies": {
+    "@neondatabase/auth": "0.7.0-beta",
     "@neondatabase/serverless": "^1.0.2",
-    "better-auth": "^1.4.0",
-    "next": "^15.5.4",
+    "next": "^16.0.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "zod": "^4.1.11"
@@ -24,7 +23,7 @@
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
     "eslint": "^9.36.0",
-    "eslint-config-next": "^15.5.4",
+    "eslint-config-next": "^16.0.0",
     "tsx": "^4.20.6",
     "typescript": "^5.9.2"
   }
