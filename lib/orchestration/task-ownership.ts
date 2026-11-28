@@ -1,4 +1,4 @@
-export const COSMOS_TASK_OWNERSHIP_VERSION = "1.0" as const;
+export const COSMOS_TASK_OWNERSHIP_VERSION = "1.1" as const;
 
 export const TASK_OWNER_BY_CATEGORY = {
   architecture: "SHAPE",
@@ -15,7 +15,25 @@ export const TASK_OWNER_BY_CATEGORY = {
   general: "ORCH",
 } as const;
 
+export const TASK_OWNER_BY_SUBJECT = {
+  architecture: "SHAPE",
+  governance: "SHAPE",
+  guidance: "ORCH",
+  cosmaxx: "COSMAXX",
+  craft: "CRAFT",
+  devops: "DEVOPS",
+  security: "DEFENDER",
+  threat_protection: "FORCEFIELD",
+  workflow_integration: "HOOKS",
+  orchestration: "ORCH",
+  evidence: "CME_EVIDENCE_ENGINE",
+  validation: "12_GAP_CYCLE",
+  discovery: "DISCOVERY",
+  general: "ORCH",
+} as const;
+
 export type CosmosTaskCategory = keyof typeof TASK_OWNER_BY_CATEGORY;
+export type CosmosTaskSubject = keyof typeof TASK_OWNER_BY_SUBJECT;
 export type CosmosTaskRisk = "read_only" | "side_effect" | "consequential";
 
 export type ExecutionProviderCandidate = {
@@ -25,7 +43,14 @@ export type ExecutionProviderCandidate = {
 
 export type TaskOwnershipRequest = {
   taskId: string;
+  /** Intended, outcome-oriented result. Required for every assignment. */
+  objective: string;
+  /** Canonical affected subsystem/domain. This is the primary ownership signal. */
+  subject: CosmosTaskSubject;
+  /** Explain why the subject is the correct domain for the stated objective. */
+  alignmentRationale: string;
   description: string;
+  /** Secondary classification; it never overrides subject ownership. */
   category: CosmosTaskCategory;
   risk: CosmosTaskRisk;
   requiredCapabilities: string[];
@@ -37,8 +62,12 @@ export type TaskOwnershipRequest = {
 export type TaskOwnershipAssignment = {
   policyVersion: typeof COSMOS_TASK_OWNERSHIP_VERSION;
   taskId: string;
+  objective: string;
+  subject: CosmosTaskSubject;
+  alignmentRationale: string;
   status: "assigned" | "blocked";
-  taskOwner: (typeof TASK_OWNER_BY_CATEGORY)[CosmosTaskCategory];
+  taskOwner: (typeof TASK_OWNER_BY_SUBJECT)[CosmosTaskSubject];
+  ownerSelectionBasis: "subject";
   orchestrator: "ORCH";
   providerRouter: "TPO";
   executionProvider: string | null;
@@ -89,6 +118,8 @@ function eligibleProviders(
 
 /**
  * Deterministic, fail-closed task ownership assignment.
+ * The declared objective and canonical subject are mandatory. Subject ownership
+ * is authoritative; category is secondary metadata and cannot override it.
  * This policy assigns responsibility only; it does not authorize or execute work.
  */
 export function assignTaskOwnership(
@@ -97,11 +128,18 @@ export function assignTaskOwnership(
   const blockers: string[] = [];
 
   if (!isNonEmptyString(request.taskId)) blockers.push("A non-empty taskId is required.");
+  if (!isNonEmptyString(request.objective)) blockers.push("A concrete task objective is required.");
+  if (!isNonEmptyString(request.alignmentRationale)) {
+    blockers.push("An objective-to-subject alignment rationale is required.");
+  }
   if (!isNonEmptyString(request.description)) blockers.push("A task description is required.");
+  if (!Object.prototype.hasOwnProperty.call(TASK_OWNER_BY_SUBJECT, request.subject)) {
+    blockers.push("The task subject is not registered; ownership remains unassigned.");
+  }
   if (!Object.prototype.hasOwnProperty.call(TASK_OWNER_BY_CATEGORY, request.category)) {
     blockers.push("The task category is not registered.");
   }
-  if (!["read_only", "side_effect", "consequential"].includes(request.risk)) {
+  if (![ "read_only", "side_effect", "consequential" ].includes(request.risk)) {
     blockers.push("A valid task risk classification is required.");
   }
   if (!isUniqueStringArray(request.requiredCapabilities) || request.requiredCapabilities.length === 0) {
@@ -134,7 +172,7 @@ export function assignTaskOwnership(
     }
   }
 
-  const validRisk: CosmosTaskRisk = ["read_only", "side_effect", "consequential"].includes(request.risk)
+  const validRisk: CosmosTaskRisk = [ "read_only", "side_effect", "consequential" ].includes(request.risk)
     ? request.risk
     : "read_only";
   const requiresWarpGateAuthorization = validRisk !== "read_only";
@@ -143,8 +181,12 @@ export function assignTaskOwnership(
   return {
     policyVersion: COSMOS_TASK_OWNERSHIP_VERSION,
     taskId: isNonEmptyString(request.taskId) ? request.taskId : "UNASSIGNED",
+    objective: isNonEmptyString(request.objective) ? request.objective : "",
+    subject: request.subject,
+    alignmentRationale: isNonEmptyString(request.alignmentRationale) ? request.alignmentRationale : "",
     status: blockers.length === 0 ? "assigned" : "blocked",
-    taskOwner: TASK_OWNER_BY_CATEGORY[request.category] ?? "ORCH",
+    taskOwner: TASK_OWNER_BY_SUBJECT[request.subject] ?? "ORCH",
+    ownerSelectionBasis: "subject",
     orchestrator: REQUIRED_OWNERSHIP_ROLES.orchestrator,
     providerRouter: REQUIRED_OWNERSHIP_ROLES.providerRouter,
     executionProvider: selectedProvider,
