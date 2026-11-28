@@ -1,9 +1,11 @@
--- Cosmos Alien Mind MVP schema (PostgreSQL / Neon)
--- Apply this file to the intended Neon database before using conversation APIs.
+-- Cosmos Alien Mind schema (PostgreSQL / Neon).
+-- Apply only to the intended database after reviewing the deployment plan.
 
 CREATE TABLE IF NOT EXISTS conversations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL DEFAULT 'New conversation',
+  tenant_id TEXT NOT NULL,
+  owner_subject TEXT NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -19,5 +21,5 @@ CREATE TABLE IF NOT EXISTS messages (
 CREATE INDEX IF NOT EXISTS messages_conversation_created_idx
   ON messages (conversation_id, created_at);
 
-CREATE INDEX IF NOT EXISTS conversations_updated_idx
-  ON conversations (updated_at DESC);
+CREATE INDEX IF NOT EXISTS conversations_tenant_owner_updated_idx
+  ON conversations (tenant_id, owner_subject, updated_at DESC);
