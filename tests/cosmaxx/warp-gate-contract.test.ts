@@ -155,3 +155,24 @@ test("rejects incomplete bindings before contacting WARP GATE", async () => {
   assert.equal(result.allowed, false);
   assert.equal(called, false);
 });
+
+test("rejects a grant that expires while authorization is in progress", async () => {
+  let clockCalls = 0;
+  const result = await authorizeWarpGateExecution(gate(), binding, {
+    now: () => {
+      clockCalls += 1;
+      return clockCalls === 1 ? NOW : NOW + 6 * 60_000;
+    },
+  });
+  assert.equal(result.allowed, false);
+});
+
+test("requires approval for high and critical risk before contacting the gate", async () => {
+  let called = false;
+  const highRisk = { ...binding, risk: "high" as const, requiresHumanApproval: false };
+  const result = await authorizeWarpGateExecution(gate({
+    authorize: async () => { called = true; return { decision: "ALLOW" }; },
+  }), highRisk, options);
+  assert.equal(result.allowed, false);
+  assert.equal(called, false);
+});
