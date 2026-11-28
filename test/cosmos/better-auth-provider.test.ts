@@ -1,11 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  createBetterAuthIdentityProvider,
-  type BetterAuthSessionSnapshot,
+  createNeonAuthIdentityProvider,
+  type NeonAuthSessionSnapshot,
 } from "../../lib/cosmos/identity-provider";
 
-const snapshot: BetterAuthSessionSnapshot = {
+const snapshot: NeonAuthSessionSnapshot = {
   user: { id: "user-123" },
   session: {
     id: "session-456",
@@ -15,14 +15,23 @@ const snapshot: BetterAuthSessionSnapshot = {
   },
 };
 
-test("maps only a verified Better Auth session to a COSMOS principal", async () => {
-  process.env.BETTER_AUTH_URL = "https://cosmos.example.test";
-  const provider = createBetterAuthIdentityProvider(async () => snapshot);
-  const claims = await provider.verifyRequest(new Request("https://cosmos.example.test/api"));
+const authBaseUrl =
+  "https://neon-auth.example.test/neondb/auth";
+
+test("maps a Neon Auth-verified session and active membership to a COSMOS principal", async () => {
+  const provider = createNeonAuthIdentityProvider(
+    async () => snapshot,
+    async () => ({ id: "member-123", organizationId: "org-789" }),
+    authBaseUrl,
+  );
+  const claims = await provider.verifyRequest(
+    new Request("https://cosmos.example.test/api"),
+  );
+
   assert.deepEqual(claims, {
     subject: "user-123",
     tenantId: "org-789",
-    issuer: "https://cosmos.example.test",
+    issuer: "https://neon-auth.example.test",
     roles: ["authenticated"],
     scopes: [],
     issuedAt: "2026-11-21T10:00:00.000Z",
@@ -31,28 +40,51 @@ test("maps only a verified Better Auth session to a COSMOS principal", async () 
   });
 });
 
-test("rejects missing Better Auth sessions", async () => {
-  const provider = createBetterAuthIdentityProvider(async () => null);
+test("rejects missing Neon Auth sessions", async () => {
+  const provider = createNeonAuthIdentityProvider(
+    async () => null,
+    async () => ({ id: "member-123" }),
+    authBaseUrl,
+  );
   await assert.rejects(
     provider.verifyRequest(new Request("https://cosmos.example.test/api")),
-    /No valid Better Auth session/,
+    /No valid Neon Auth session/,
   );
 });
 
 test("rejects sessions without an active organization", async () => {
-  const provider = createBetterAuthIdentityProvider(async () => ({
-    ...snapshot,
-    session: { ...snapshot.session, activeOrganizationId: null },
-  }));
+  const provider = createNeonAuthIdentityProvider(
+    async () => ({
+      ...snapshot,
+      session: { ...snapshot.session, activeOrganizationId: null },
+    }),
+    async () => ({ id: "member-123" }),
+    authBaseUrl,
+  );
   await assert.rejects(
     provider.verifyRequest(new Request("https://cosmos.example.test/api")),
     /active organization is required/,
   );
 });
 
+test("rejects an active organization without current membership", async () => {
+  const provider = createNeonAuthIdentityProvider(
+    async () => snapshot,
+    async () => null,
+    authBaseUrl,
+  );
+  await assert.rejects(
+    provider.verifyRequest(new Request("https://cosmos.example.test/api")),
+    /Current organization membership is required/,
+  );
+});
+
 test("does not derive tenant identity from request-supplied headers", async () => {
-  process.env.BETTER_AUTH_URL = "https://cosmos.example.test";
-  const provider = createBetterAuthIdentityProvider(async () => snapshot);
+  const provider = createNeonAuthIdentityProvider(
+    async () => snapshot,
+    async () => ({ id: "member-123", organizationId: "org-789" }),
+    authBaseUrl,
+  );
   const request = new Request("https://cosmos.example.test/api", {
     headers: { "x-tenant-id": "attacker-controlled-tenant" },
   });
