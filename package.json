@@ -9,7 +9,9 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test:cosmos": "tsx --test test/cosmos/*.test.ts",
-    "auth:generate": "npx auth@latest generate --config ./lib/auth.ts --output db/migrations/20261128_002_better_auth.sql --yes"
+    "auth:generate": "npx auth@latest generate --config ./lib/auth.ts --output db/migrations/20261128_002_better_auth.sql --yes",
+    "test:cosmaxx": "tsx --test tests/cosmaxx/*.test.ts",
+    "test": "npm run test:cosmos && npm run test:cosmaxx"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",

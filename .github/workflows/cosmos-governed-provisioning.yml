@@ -1,0 +1,35 @@
+name: COSMOS Governed Provisioning Validation
+
+on:
+  push:
+    branches:
+      - cosmos/m6-governed-provisioning-integration-v1
+  pull_request:
+    branches:
+      - cosmos/m6-l4-l5-orchestration-provision
+      - cosmos/m6-governed-provisioning-integration-v1
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: COSMOS identity and security tests
+        run: npm run test:cosmos
+      - name: COSMAXX, ownership, WARP GATE and provisioning tests
+        run: npm run test:cosmaxx
+      - name: TypeScript
+        run: npm run typecheck
+      - name: ESLint
+        run: npm run lint
+      - name: Production build
+        run: npm run build
