@@ -17,5 +17,19 @@ export const auth = betterAuth({
 });
 
 export function isBetterAuthConfigured(): boolean {
-  return Boolean(process.env.DATABASE_URL && process.env.BETTER_AUTH_SECRET && process.env.BETTER_AUTH_URL);
+  const database = process.env.DATABASE_URL;
+  const secret = process.env.BETTER_AUTH_SECRET;
+  const baseURL = process.env.BETTER_AUTH_URL;
+  if (!database || !secret || secret.length < 32 || !baseURL) return false;
+
+  try {
+    const databaseProtocol = new URL(database).protocol;
+    const application = new URL(baseURL);
+    const supportedDatabase = databaseProtocol === "postgres:" || databaseProtocol === "postgresql:";
+    const supportedOrigin = application.protocol === "http:" || application.protocol === "https:";
+    const productionTransport = process.env.NODE_ENV !== "production" || application.protocol === "https:";
+    return supportedDatabase && supportedOrigin && productionTransport;
+  } catch {
+    return false;
+  }
 }
