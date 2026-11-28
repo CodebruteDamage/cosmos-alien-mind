@@ -75,6 +75,7 @@ CREATE TABLE IF NOT EXISTS cosmos_tasks (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (tenant_id, idempotency_key),
+  UNIQUE (tenant_id, task_id),
   FOREIGN KEY (tenant_id, task_owner_principal_id)
     REFERENCES cosmos_task_owner_registry (tenant_id, principal_id),
   FOREIGN KEY (tenant_id, execution_provider_id)
@@ -90,7 +91,7 @@ CREATE INDEX IF NOT EXISTS cosmos_tasks_tenant_state_updated_idx
 CREATE TABLE IF NOT EXISTS cosmos_warp_gate_decisions (
   decision_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id TEXT NOT NULL,
-  task_id TEXT NOT NULL REFERENCES cosmos_tasks(task_id),
+  task_id TEXT NOT NULL,
   actor_id TEXT NOT NULL,
   workflow_id TEXT NOT NULL,
   step_id TEXT NOT NULL,
@@ -108,7 +109,8 @@ CREATE TABLE IF NOT EXISTS cosmos_warp_gate_decisions (
   evidence_ref TEXT NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   CHECK (decision <> 'ALLOW' OR (grant_reference IS NOT NULL AND grant_expires_at IS NOT NULL)),
-  CHECK (risk NOT IN ('high', 'critical') OR approval_reference IS NOT NULL OR decision <> 'ALLOW')
+  CHECK (risk NOT IN ('high', 'critical') OR approval_reference IS NOT NULL OR decision <> 'ALLOW'),
+  FOREIGN KEY (tenant_id, task_id) REFERENCES cosmos_tasks (tenant_id, task_id)
 );
 
 CREATE INDEX IF NOT EXISTS cosmos_warp_gate_task_decision_idx
@@ -117,7 +119,7 @@ CREATE INDEX IF NOT EXISTS cosmos_warp_gate_task_decision_idx
 CREATE TABLE IF NOT EXISTS cosmos_task_events (
   event_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id TEXT NOT NULL,
-  task_id TEXT NOT NULL REFERENCES cosmos_tasks(task_id),
+  task_id TEXT NOT NULL,
   actor_subject TEXT NOT NULL,
   from_state TEXT,
   to_state TEXT NOT NULL,
@@ -125,7 +127,8 @@ CREATE TABLE IF NOT EXISTS cosmos_task_events (
   contract_version TEXT NOT NULL,
   correlation_id TEXT NOT NULL,
   evidence_refs JSONB NOT NULL DEFAULT '[]'::jsonb CHECK (jsonb_typeof(evidence_refs) = 'array'),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  FOREIGN KEY (tenant_id, task_id) REFERENCES cosmos_tasks (tenant_id, task_id)
 );
 
 CREATE INDEX IF NOT EXISTS cosmos_task_events_timeline_idx
@@ -134,7 +137,7 @@ CREATE INDEX IF NOT EXISTS cosmos_task_events_timeline_idx
 CREATE TABLE IF NOT EXISTS cosmos_task_outbox (
   outbox_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id TEXT NOT NULL,
-  task_id TEXT NOT NULL REFERENCES cosmos_tasks(task_id),
+  task_id TEXT NOT NULL,
   authorization_decision_id UUID NOT NULL REFERENCES cosmos_warp_gate_decisions(decision_id),
   idempotency_key TEXT NOT NULL,
   payload JSONB NOT NULL CHECK (jsonb_typeof(payload) = 'object'),
@@ -145,7 +148,8 @@ CREATE TABLE IF NOT EXISTS cosmos_task_outbox (
   locked_until TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE (tenant_id, idempotency_key)
+  UNIQUE (tenant_id, idempotency_key),
+  FOREIGN KEY (tenant_id, task_id) REFERENCES cosmos_tasks (tenant_id, task_id)
 );
 
 CREATE INDEX IF NOT EXISTS cosmos_task_outbox_claim_idx
