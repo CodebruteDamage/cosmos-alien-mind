@@ -159,7 +159,10 @@ CREATE OR REPLACE FUNCTION cosmos_guard_task_outbox_authorization()
 RETURNS TRIGGER LANGUAGE plpgsql AS $$
 DECLARE
   task_state TEXT;
-  decision_record RECORD;
+  decision_value TEXT;
+  decision_tenant TEXT;
+  decision_task TEXT;
+  decision_expiry TIMESTAMPTZ;
 BEGIN
   SELECT state INTO task_state
     FROM cosmos_tasks
@@ -170,15 +173,16 @@ BEGIN
   END IF;
 
   SELECT decision, tenant_id, task_id, grant_expires_at
-    INTO decision_record
+    INTO decision_value, decision_tenant, decision_task, decision_expiry
     FROM cosmos_warp_gate_decisions
     WHERE decision_id = NEW.authorization_decision_id;
 
-  IF decision_record.decision IS DISTINCT FROM 'ALLOW'
-     OR decision_record.tenant_id IS DISTINCT FROM NEW.tenant_id
-     OR decision_record.task_id IS DISTINCT FROM NEW.task_id
-     OR decision_record.grant_expires_at IS NULL
-     OR decision_record.grant_expires_at <= NOW() THEN
+  IF NOT FOUND
+     OR decision_value IS DISTINCT FROM 'ALLOW'
+     OR decision_tenant IS DISTINCT FROM NEW.tenant_id
+     OR decision_task IS DISTINCT FROM NEW.task_id
+     OR decision_expiry IS NULL
+     OR decision_expiry <= NOW() THEN
     RAISE EXCEPTION 'A current, task-bound WARP GATE ALLOW decision is required';
   END IF;
 
