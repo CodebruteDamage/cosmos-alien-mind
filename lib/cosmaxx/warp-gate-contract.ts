@@ -146,8 +146,8 @@ export async function authorizeWarpGateExecution(
   const verificationTimeoutMs = options.verificationTimeoutMs ?? 5_000;
   const maxClockSkewMs = options.maxClockSkewMs ?? 30_000;
   const now = options.now ?? Date.now;
-  const currentTime = now();
-  if (![authorizationTimeoutMs, verificationTimeoutMs, maxClockSkewMs, currentTime].every(Number.isFinite) ||
+  const initialTime = now();
+  if (![authorizationTimeoutMs, verificationTimeoutMs, maxClockSkewMs, initialTime].every(Number.isFinite) ||
       authorizationTimeoutMs <= 0 || verificationTimeoutMs <= 0 || maxClockSkewMs < 0) {
     return denied("Invalid WARP GATE timeout or clock configuration.");
   }
@@ -189,8 +189,10 @@ export async function authorizeWarpGateExecution(
     return denied("WARP GATE grant verification failed or timed out; execution blocked.");
   }
 
+  const verificationTime = now();
+  if (!Number.isFinite(verificationTime)) return denied("WARP GATE verification clock is invalid; execution blocked.");
   if (!isRecord(verification) || verification.valid !== true ||
-      !claimsMatch(verification.verifiedClaims, binding, currentTime, maxClockSkewMs)) {
+      !claimsMatch(verification.verifiedClaims, binding, verificationTime, maxClockSkewMs)) {
     return denied("WARP GATE grant was invalid, expired, mismatched, or not atomically consumed.");
   }
 
