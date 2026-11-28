@@ -109,3 +109,18 @@ M6.11 L4/L5 benchmark, security review, and acceptance
 ## 10. Provisioning status and next action
 
 This branch contains the approved architecture specification only. No runtime implementation, deployment, production authorization, or L4/L5 certification is implied. Next: complete a deeper read-only prescan of the repository and its tests, map existing components to this specification, record evidence and gaps, then implement only approved, verified gaps on this branch.
+
+
+## 11. Ownership Scope Contract
+
+The automatic ownership step is governed by the detailed **Ownership Scope Contract** in [cosmos-m6-ownership-scope-contract.md](./cosmos-m6-ownership-scope-contract.md). That contract is normative for task ownership design and defines:
+
+- exactly one accountable Task Owner per executable task;
+- objective-linked scope, exclusions, constraints, acceptance criteria, and evidence;
+- owner eligibility and no-candidate fallback behavior;
+- separation of accountability, execution, provider assignment, approval, and WARP GATE authorization;
+- parent/child scope inheritance, bounded delegation, handoffs, and blocker remediation;
+- scope/authority drift detection and immutable ownership history;
+- lifecycle gates and runtime acceptance criteria.
+
+A Task Owner assignment never grants permissions. A task cannot enter OWNED without a complete contract and eligible owner. A task cannot execute protected actions without independent WARP GATE authorization. Runtime implementation and certification remain pending.
