@@ -94,7 +94,7 @@ export function assignTaskOwnership(
 
   if (!isNonEmptyString(request.taskId)) blockers.push("A non-empty taskId is required.");
   if (!isNonEmptyString(request.description)) blockers.push("A task description is required.");
-  if (!Object.hasOwn(TASK_OWNER_BY_CATEGORY, request.category)) {
+  if (!Object.prototype.hasOwnProperty.call(TASK_OWNER_BY_CATEGORY, request.category)) {
     blockers.push("The task category is not registered.");
   }
   if (!["read_only", "side_effect", "consequential"].includes(request.risk)) {
