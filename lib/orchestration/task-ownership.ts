@@ -71,16 +71,20 @@ function isUniqueStringArray(value: unknown): value is string[] {
     new Set(value.map((entry) => entry.trim())).size === value.length;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 function eligibleProviders(
   request: TaskOwnershipRequest,
 ): ExecutionProviderCandidate[] {
-  return request.executionProviders.filter((provider) =>
-    isNonEmptyString(provider.id) &&
-    isUniqueStringArray(provider.capabilities) &&
-    request.requiredCapabilities.every((capability) =>
-      provider.capabilities.includes(capability),
-    ),
-  );
+  return request.executionProviders.filter((candidate) => {
+    if (!isRecord(candidate) || !isNonEmptyString(candidate.id) ||
+        !isUniqueStringArray(candidate.capabilities)) return false;
+    return request.requiredCapabilities.every((capability) =>
+      candidate.capabilities.includes(capability),
+    );
+  });
 }
 
 /**
@@ -100,8 +104,8 @@ export function assignTaskOwnership(
   if (!["read_only", "side_effect", "consequential"].includes(request.risk)) {
     blockers.push("A valid task risk classification is required.");
   }
-  if (!isUniqueStringArray(request.requiredCapabilities)) {
-    blockers.push("requiredCapabilities must contain unique, non-empty strings.");
+  if (!isUniqueStringArray(request.requiredCapabilities) || request.requiredCapabilities.length === 0) {
+    blockers.push("requiredCapabilities must contain at least one unique, non-empty capability.");
   }
   if (!Array.isArray(request.acceptanceCriteria) ||
       request.acceptanceCriteria.length === 0 ||
@@ -130,8 +134,11 @@ export function assignTaskOwnership(
     }
   }
 
-  const requiresWarpGateAuthorization = request.risk !== "read_only";
-  const requiresHumanApproval = request.risk === "consequential";
+  const validRisk: CosmosTaskRisk = ["read_only", "side_effect", "consequential"].includes(request.risk)
+    ? request.risk
+    : "read_only";
+  const requiresWarpGateAuthorization = validRisk !== "read_only";
+  const requiresHumanApproval = validRisk === "consequential";
 
   return {
     policyVersion: COSMOS_TASK_OWNERSHIP_VERSION,
@@ -145,7 +152,7 @@ export function assignTaskOwnership(
     validationProvider: REQUIRED_OWNERSHIP_ROLES.validationProvider,
     governanceProvider: REQUIRED_OWNERSHIP_ROLES.governanceProvider,
     evidenceProvider: REQUIRED_OWNERSHIP_ROLES.evidenceProvider,
-    risk: request.risk,
+    risk: validRisk,
     requiresWarpGateAuthorization,
     requiresHumanApproval,
     dispatchReady: blockers.length === 0 && !requiresWarpGateAuthorization,
