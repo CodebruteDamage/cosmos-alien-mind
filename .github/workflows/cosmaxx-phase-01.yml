@@ -4,9 +4,13 @@ on:
   pull_request:
     branches:
       - cosmaxx/runtime-adapter-v1
+      - cosmaxx/phase-01-hardening-v1
+      - cosmos/automatic-task-ownership-v1
     paths:
       - 'lib/cosmaxx/**'
+      - 'lib/orchestration/**'
       - 'tests/cosmaxx/**'
+      - 'docs/task-ownership/**'
       - 'tsconfig.cosmaxx-tests.json'
       - 'package.json'
       - '.github/workflows/cosmaxx-phase-01.yml'
