@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test:cosmaxx": "tsc -p tsconfig.cosmaxx-tests.json && node --test .test-build/tests/cosmaxx/*.test.js"
+    "test:cosmaxx": "tsc -p tsconfig.cosmaxx-tests.json --outDir /tmp/cosmaxx-test-build && node --test /tmp/cosmaxx-test-build/tests/cosmaxx/*.test.js"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
